@@ -1,7 +1,10 @@
-/* $Id: tek_user.c,v 1.1 2006-08-25 10:33:01 sds Exp $ */
+/* $Id: tek_user.c,v 1.2 2006-08-25 14:24:04 sds Exp $ */
 
 /*
  * $Log: not supported by cvs2svn $
+ * Revision 1.1  2006/08/25 10:33:01  sds
+ * Initial revision
+ *
  */
 
 /* tek_afg_user.c
@@ -58,12 +61,12 @@ char	cmd[256];
 	tek_afg_swap_bytes(buf, buf_len); /* Swap bytes, little endian -> big endian */
 	ret=vxi11_send_data_block(clink, ":TRACE:DATA EMEMORY,", buf, buf_len);
 	if (ret < 0) {
-		printf("error, could not send waveform data, quitting...\n");
+		printf("tek_afg_user: error sending waveform data...\n");
 		return ret;
 		}
 	if (chan > 0 && chan < 5) {
 		sprintf(cmd,"TRACE:COPY USER%d,EMEM",chan);
-		vxi11_send(clink,cmd);
+		return vxi11_send(clink,cmd);
 		}
 	return 0;
 	}
