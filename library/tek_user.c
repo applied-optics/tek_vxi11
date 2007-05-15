@@ -1,24 +1,27 @@
-/* $Id: tek_user.c,v 1.2 2006-08-25 14:24:04 sds Exp $ */
+/* $Id: tek_user.c,v 1.3 2007-05-15 15:11:06 sds Exp $ */
 
 /*
  * $Log: not supported by cvs2svn $
+ * Revision 1.2  2006/08/25 14:24:04  sds
+ * just tidied up error messages and return values. trivial changes.
+ *
  * Revision 1.1  2006/08/25 10:33:01  sds
  * Initial revision
  *
  */
 
-/* tek_afg_user.c
- * Copyright (C) 2006 Steve D. Sharples
+/* tek_user.c
+ * Copyright (C) 2006-2007 Steve D. Sharples
  *
- * User library of useful functions for talking to Tektronix Arbitrary function
- * generators (AFG's) using the VXI11 protocol, for Linux. You will also need
- * the vxi11_X.XX.tar.gz source, currently available from:
+ * User library of useful functions for talking to Tektronix instruments
+ * (e.g. scopes and AFG's) using the VXI11 protocol, for Linux. You will also
+ * need the vxi11_X.XX.tar.gz source, currently available from:
  * http://optics.eee.nottingham.ac.uk/vxi11/
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
+ * as published by the Free Software Foundation;  version 2
+ * of the License.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -32,18 +35,26 @@
  * The author's email address is steve.sharples@nottingham.ac.uk
  */
 
-#include "tek_afg_user.h"
+#include "tek_user.h"
+
+/*****************************************************************************
+ * Generic Tektronix functions, suitable for all devices                     *
+ *****************************************************************************/
 
 /* This really is just a wrapper. Only here because folk might be uncomfortable
  * using commands from the vxi11_user library directly! */
-int	tek_afg_open(char *ip, CLINK *clink) {
+int	tek_open(char *ip, CLINK *clink) {
 	return vxi11_open_device(ip, clink);
 	}
 
 /* Again, just a wrapper */
-int	tek_afg_close(char *ip, CLINK *clink) {
+int	tek_close(char *ip, CLINK *clink) {
 	return vxi11_close_device(ip, clink);
 	}
+
+/*****************************************************************************
+ * Tektronix AFG (abritrary function generator) functions                    *
+ *****************************************************************************/
 
 /* Function to upload an arbitrary waveform to the intrument's edit memory.
  * Will optionally transfer the contents of the edit memory to a specified
@@ -87,3 +98,4 @@ int	i;
 		}
 	memcpy(buf, tmp, (unsigned long) buf_len);
 	}
+
