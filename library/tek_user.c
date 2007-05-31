@@ -1,7 +1,13 @@
-/* $Id: tek_user.c,v 1.4 2007-05-17 12:43:29 sds Exp $ */
+/* $Id: tek_user.c,v 1.5 2007-05-31 13:48:38 sds Exp $ */
 
 /*
  * $Log: not supported by cvs2svn $
+ * Revision 1.4  2007/05/17 12:43:29  sds
+ * Major additions, all scope-related. All the basic functionality
+ * for setting up your scope to grab traces, set the number of
+ * averages, load and save setups etc.
+ * So far, only tested on TDS3054B.
+ *
  * Revision 1.3  2007/05/15 15:11:06  sds
  * renamed this user library, from "tek_afg_user" to "tek_user".
  * The aim is to add to it commands for Tek instruments other than just
@@ -118,7 +124,6 @@ int	tek_scope_send_setup(CLINK *clink, char* buf, unsigned long buf_len) {
  * tek_scope_set_for_capture() before you grab the data, then either call that
  * function again with the same values, or, run this function straight after
  * you've acquired your data. */
-
 long    tek_scope_write_wfi_file(CLINK *clink, char *wfiname, char *captured_by, int no_of_traces, unsigned long timeout) {
 FILE	*wfi;
 double	vgain, voffset, hinterval, hoffset; /* names used in wfi file */
@@ -156,6 +161,20 @@ long	no_of_bytes;
 		}
 
 	return no_of_bytes;
+	}
+
+/* Wrapper for above fn; this one sets the DATA:SOURCE first */
+long    tek_scope_write_wfi_file(CLINK *clink, char *wfiname, char chan, char *captured_by, int no_of_traces, unsigned long timeout) {
+char	source[20];
+char	cmd[256];
+
+	memset(source,0,20);
+	tek_scope_channel_str(chan, source);
+	/* set the source channel */
+	sprintf(cmd,"DATA:SOURCE %s",source);
+	vxi11_send(clink, cmd);
+
+	return tek_scope_write_wfi_file(clink, wfiname, captured_by, no_of_traces, timeout);
 	}
 
 /* Makes sure that the number of points we get accurately reflects what's on
@@ -298,6 +317,10 @@ long	opc_value;
 	return bytes_returned;
 	}
 
+void	tek_scope_set_for_auto(CLINK *clink) {
+	vxi11_send(clink, "ACQ:STOPAFTER RUNSTOP;:ACQ:STATE 1");
+	}
+
 /* Sets the number of averages. If passes a number <= 1, will set the scope to
  * SAMPLE mode (ie no averaging). Note that the number will be rounded up or
  * down to the nearest factor of 2, or down to the maximum. */
@@ -360,6 +383,25 @@ long	result;
 		}
 	}
 
+/* Returns the actual number of points that will be returned, based on
+ * DATA:START and DATA:STOP */
+long	tek_scope_get_no_points(CLINK *clink) {
+long	start, stop, no_points;
+
+	start = vxi11_obtain_long_value(clink, "DATA:START?");
+	stop  = vxi11_obtain_long_value(clink, "DATA:STOP?");
+	no_points = (stop - start) + 1;
+	return no_points;
+	}
+
+/* Returns the sample rate, based on 1/XINCR */
+double	tek_scope_get_sample_rate(CLINK *clink) {
+double	xincr, s_rate;
+
+	xincr  = vxi11_obtain_double_value(clink, "WFMPRE:XINCR?");
+	s_rate = 1 / xincr;
+	return s_rate;
+	}
 
 
 /*****************************************************************************
