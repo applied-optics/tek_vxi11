@@ -1,7 +1,10 @@
-/* $Id: tgetwf.c,v 1.1 2007-05-17 12:46:08 sds Exp $ */
+/* $Id: tgetwf.c,v 1.2 2007-06-01 12:02:28 sds Exp $ */
 
 /*
  * $Log: not supported by cvs2svn $
+ * Revision 1.1  2007/05/17 12:46:08  sds
+ * Initial revision
+ *
  */
 
 /* tgetwf.c
@@ -60,7 +63,7 @@ int	main(int argc, char *argv[]) {
 
 static char	*progname;
 static char	*device_ip;
-char		chnl; /* we use '1' to '4' for channels, and 'A' to 'D' for FUNC[1...4] */
+char		channel[20];
 FILE		*f_wf;
 char 		wfname[256];
 char 		wfiname[256];
@@ -74,7 +77,7 @@ BOOL		got_ip=FALSE;
 BOOL		got_scope_channel=FALSE;
 BOOL		got_file=FALSE;
 BOOL		got_no_averages=FALSE;
-int		no_averages;
+int		no_averages, actual_no_averages;
 int		count=0;
 int		repeat=1;
 char		ch;
@@ -101,7 +104,7 @@ CLINK		*clink; /* client link (actually a structure contining CLIENT and VXI11_L
 			}
 
 		if(sc(argv[index],"-channel")||sc(argv[index],"-c")||sc(argv[index],"-scope_channel")){
-			sscanf(argv[++index],"%c",&chnl);
+			snprintf(channel,20,"%s",argv[++index]);
 			got_scope_channel=TRUE;
 			}
 
@@ -133,18 +136,18 @@ CLINK		*clink; /* client link (actually a structure contining CLIENT and VXI11_L
 		index++;
 		}
 
-	if(got_file==FALSE||got_scope_channel==FALSE||got_ip==FALSE){
+	if(got_file==FALSE||got_ip==FALSE||got_scope_channel==FALSE){
 		printf("%s: grabs a waveform from a Tektronix scope via ethernet, by Steve (May 07)\n",progname);
 		printf("Run using %s [arguments]\n\n",progname);
 		printf("REQUIRED ARGUMENTS:\n");
 		printf("-ip    -ip_address     -IP      : IP address of scope (eg 128.243.74.98)\n");
 		printf("-f     -filename       -file    : filename (without extension)\n");
-		printf("-c     -scope_channel  -channel : scope channel (1,2,3,4,A,B,C,D)\n");
+		printf("-c     -scope_channel  -channel : scope channel (1,2,3,4,M,D0-D15)\n");
 		printf("OPTIONAL ARGUMENTS:\n");
 		printf("-t     -timeout                 : timout (in milliseconds)\n");
 /* Sample rate and no_points not implemented yet */
 //		printf("-s     -sample_rate    -rate    : set sample rate (eg 1e9 = 1GS/s)\n");
-//		printf("-n     -no_points      -points  : set minimum no of points\n");
+		printf("-n     -no_points      -points  : set maximum no of points\n");
 		printf("-a     -averages       -aver    : set no of averages (<=1 means none)\n");
 		printf("-r     -repeat         -rep     : take 'r' traces (0 means \"until 'q'\")\n");
 		printf("-clsw  -clear_sweeps   -clear   : clear sweeps (if averaging)\n\n");
@@ -175,18 +178,29 @@ CLINK		*clink; /* client link (actually a structure contining CLIENT and VXI11_L
 			exit(2);
 			}
 
+	/* If we've specified the number of points (ie record length), then set it.
+	 * Otherwise, leave the scope in the condition it's in, in that respect. */
+		if (npoints > 0) {
+			actual_npoints = tek_scope_set_record_length(clink, npoints);
+			printf("You asked for %ld points. Record length has been set to %ld points.\n",npoints, actual_npoints);
+			}
+
 	/* Set up the scope. This function also returns the no of bytes needed */
 		buf_size = tek_scope_set_for_capture(clink, clear_sweeps, timeout);
 		buf=new char[buf_size];
 
 	/* If we've specified the number of averages, then set it. Otherwise, just
 	 * leave the scope in the condition it's in, in that respect. */
-		if (got_no_averages == TRUE) tek_scope_set_averages(clink, no_averages);
+		if (got_no_averages == TRUE) {
+			tek_scope_set_averages(clink, no_averages);
+			actual_no_averages = tek_scope_get_averages(clink);
+			printf("You asked for %d averages. Averages has been set to %d averages.\n", no_averages, actual_no_averages);
+			}
 
 	/* Sit in a loop until we're done with taking measurements */
 		do {
 	/* This is where we transfer the data from the scope to the PC. */
-			bytes_returned = tek_scope_get_data(clink, chnl, clear_sweeps, buf, buf_size, timeout);
+			bytes_returned = tek_scope_get_data(clink, channel, clear_sweeps, buf, buf_size, timeout);
 			if (bytes_returned <=0) {
 				printf("Problem reading the data, quitting...\n");
 				exit(2);
@@ -208,10 +222,12 @@ CLINK		*clink; /* client link (actually a structure contining CLIENT and VXI11_L
 		delete[] buf;
 
 	/* Here we gather waveform information and write the wfi file */
-	tek_scope_write_wfi_file(clink, wfiname, progname, count, timeout);
+		tek_scope_write_wfi_file(clink, wfiname, progname, count, timeout);
 
 	/* Finally we sever the link to the client. */
 		tek_close(device_ip,clink); // could also use "vxi11_close_device()"
+
+		printf("%ld points acquired from source '%s'\n",(long)(buf_size / 2), channel);
 		}
 	else {
 		printf("error: could not open file for writing, quitting...\n");
