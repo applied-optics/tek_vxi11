@@ -1,7 +1,12 @@
-/* $Id: tek_user.h,v 1.4 2007-05-31 13:49:37 sds Exp $ */
+/* $Id: tek_user.h,v 1.5 2007-06-01 12:00:26 sds Exp $ */
 
 /*
  * $Log: not supported by cvs2svn $
+ * Revision 1.4  2007/05/31 13:49:37  sds
+ * Added a wrapper fn for tek_scope_write_wfi_file().
+ * Added tek_scope_set_for_auto(), tek_scope_get_no_points() and
+ * tek_scope_get_sample_rate().
+ *
  * Revision 1.3  2007/05/17 12:44:50  sds
  * Major additions, all scope-related. All the basic functionality
  * for setting up your scope to grab traces, set the number of
@@ -54,15 +59,21 @@ int	tek_scope_send_setup(CLINK *clink, char* buf, unsigned long buf_len);
 long	tek_scope_write_wfi_file(CLINK *clink, char *wfiname, char *captured_by, int no_of_traces, unsigned long timeout);
 long	tek_scope_write_wfi_file(CLINK *clink, char *wfiname, char chan, char *captured_by, int no_of_traces, unsigned long timeout);
 long	tek_scope_set_for_capture(CLINK *clink, int clear_sweeps, unsigned long timeout);
+long	tek_scope_set_for_capture(CLINK *clink, int clear_sweeps, long record_length, unsigned long timeout);
 void	tek_scope_force_xincr_update(CLINK *clink, unsigned long timeout);
 long	tek_scope_calculate_no_of_bytes(CLINK *clink, unsigned long timeout);
+long	tek_scope_calculate_no_of_bytes(CLINK *clink, int is_TDS3000, unsigned long timeout);
 long	tek_scope_get_data(CLINK *clink, char chan, int clear_sweeps, char *buf, unsigned long buf_len, unsigned long timeout);
+long	tek_scope_get_data(CLINK *clink, char *source, int clear_sweeps, char *buf, unsigned long buf_len, unsigned long timeout);
 void	tek_scope_set_for_auto(CLINK *clink);
 int	tek_scope_set_averages(CLINK *clink, int no_averages);
 int	tek_scope_get_averages(CLINK *clink);
+long	tek_scope_set_record_length(CLINK *clink, long record_length);
 long	tek_scope_get_no_points(CLINK *clink);
 double	tek_scope_get_sample_rate(CLINK *clink);
+int	tek_scope_is_TDS3000(CLINK *clink);
 int	tek_afg_send_arb(CLINK *clink, char *buf, unsigned long buf_len, int chan);
 int	tek_afg_send_arb(CLINK *clink, char *buf, unsigned long buf_len);
 void	tek_afg_swap_bytes(char *buf, unsigned long buf_len);
+void	tek_scope_channel_str(char *source);
 void	tek_scope_channel_str(char chan, char *source);

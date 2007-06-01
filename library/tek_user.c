@@ -1,7 +1,12 @@
-/* $Id: tek_user.c,v 1.5 2007-05-31 13:48:38 sds Exp $ */
+/* $Id: tek_user.c,v 1.6 2007-06-01 11:55:48 sds Exp $ */
 
 /*
  * $Log: not supported by cvs2svn $
+ * Revision 1.5  2007/05/31 13:48:38  sds
+ * Added a wrapper fn for tek_scope_write_wfi_file().
+ * Added tek_scope_set_for_auto(), tek_scope_get_no_points() and
+ * tek_scope_get_sample_rate().
+ *
  * Revision 1.4  2007/05/17 12:43:29  sds
  * Major additions, all scope-related. All the basic functionality
  * for setting up your scope to grab traces, set the number of
@@ -164,12 +169,12 @@ long	no_of_bytes;
 	}
 
 /* Wrapper for above fn; this one sets the DATA:SOURCE first */
-long    tek_scope_write_wfi_file(CLINK *clink, char *wfiname, char chan, char *captured_by, int no_of_traces, unsigned long timeout) {
-char	source[20];
+long    tek_scope_write_wfi_file(CLINK *clink, char *wfiname, char *source, char *captured_by, int no_of_traces, unsigned long timeout) {
 char	cmd[256];
 
-	memset(source,0,20);
-	tek_scope_channel_str(chan, source);
+	/* Check the string. If it starts with 1-4 or 'm', convert accordingly;
+	 * otherwise leave alone */
+	tek_scope_channel_str(source);
 	/* set the source channel */
 	sprintf(cmd,"DATA:SOURCE %s",source);
 	vxi11_send(clink, cmd);
@@ -177,26 +182,62 @@ char	cmd[256];
 	return tek_scope_write_wfi_file(clink, wfiname, captured_by, no_of_traces, timeout);
 	}
 
+/* Alternative version, if a char is passed for a channel (instead of a char*) */
+long    tek_scope_write_wfi_file(CLINK *clink, char *wfiname, char chan, char *captured_by, int no_of_traces, unsigned long timeout) {
+char	source[20];
+
+	memset(source,0,20);
+	tek_scope_channel_str(chan, source);
+	return tek_scope_write_wfi_file(clink, wfiname, source, captured_by, no_of_traces, timeout);
+	}
+
 /* Makes sure that the number of points we get accurately reflects what's on
  * the screen for the given sample rate. At least that's the aim.
  * If the user has asked to "clear the sweeps", set to single sequence mode. */
 long	tek_scope_set_for_capture(CLINK *clink, int clear_sweeps, unsigned long timeout) {
-long	no_bytes;
+long	value, no_bytes;
+int	is_TDS3000;
+
+	/* There is an extra command in the DPO/MSO4000 series scoped that is
+	 * very useful to us. The query is "HOR:MAIN:SAMPLERATE?" and this is
+	 * not available on the TDS3000 series. In order to work out the number
+	 * of points, we need the timebase, and either the sample rate OR the
+	 * XINCR. Only the XINCR is available on the TDS3000 scopes.
+	 * Unfortunately, it seems that if you change the record length, then
+	 * the XINCR value only gets updated after an unspecified amount of
+	 * time. Since we want to give the user the option of setting this
+	 * before acquisition, it means that we have to prat around. In order
+	 * to avoid unecessary pratting around for the 4000 series scopes,
+	 * we ask the scope what it is and work accordingly. */
+	is_TDS3000 = tek_scope_is_TDS3000(clink);
+
+	if (is_TDS3000 == 1) tek_scope_force_xincr_update(clink, timeout);
 
 	/* If we're not "clearing the sweeps" every time, then we need to be
 	 * in RUNSTOP mode... otherwise it's just going to grab the same data
-	 * over and over again */
-	//if (clear_sweeps == 0) {
+	 * over and over again. (If it's a TDS3000, then we've already done
+	 * this anyway in the pratting around waiting for XINCR to update). */
+	else if (clear_sweeps == 0) {
+		vxi11_send(clink, "ACQUIRE:STOPAFTER RUNSTOP;:ACQUIRE:STATE 1");
+		value = vxi11_obtain_long_value(clink, "*OPC?", timeout);
+		}
 
-	tek_scope_force_xincr_update(clink, timeout);
-	no_bytes = tek_scope_calculate_no_of_bytes(clink, timeout);
-
+	no_bytes = tek_scope_calculate_no_of_bytes(clink, is_TDS3000, timeout);
 
 	if (clear_sweeps == 1) {
 		vxi11_send(clink, "ACQUIRE:STOPAFTER SEQUENCE");
 		}
+
 	return no_bytes;
 	}
+
+/* Wrapper for above function. Also sets the record length */
+long	tek_scope_set_for_capture(CLINK *clink, int clear_sweeps, long record_length, unsigned long timeout) {
+	/* Idiot check... */
+	if (record_length > 0) tek_scope_set_record_length(clink, record_length);
+	return tek_scope_set_for_capture(clink, clear_sweeps, timeout);
+	}
+
 
 /* This function forces ACQ:XINC to be updated. It involves changing to RUNSTOP
  * mode, recording the current acquisition mode and no of averages, setting
@@ -209,17 +250,6 @@ long	value;
 int	acq_state;
 char	buf[256];
 
-	/* First find out if we're already in RUNSTOP mode AND that the 
-	 * acquisition state is 1 (ie running). If we are, then we assume
-	 * that the scope was already in this mode (since this function
-	 * is only called from tek_scope_set_for_capture() ) and that we
-	 * don't need to go through this performance */
-	vxi11_send_and_receive(clink, "ACQUIRE:STOPAFTER?", buf, 256, VXI11_READ_TIMEOUT);
-	if (strncmp("RUN",buf,3) == 0) {
-		value = vxi11_obtain_long_value(clink, "ACQUIRE:STATE?");
-		if (value == 1) return;
-		}
-	
 	/* We need to perform an acq:state 1 doing first, otherwise it could
 	 * just get the wrong value of hor:record. We also need to set the
 	 * into RUNSTOP mode (even if briefly) so that XINCR get updated too.
@@ -250,17 +280,25 @@ char	buf[256];
  * make _acquisition_ any faster (the scope may be acquiring more points than
  * we're interested in), it does reduce bandwidth over LAN. It's mainly so
  * that we get the data we can see on the screen and nothing else, though. */
-long	tek_scope_calculate_no_of_bytes(CLINK *clink, unsigned long timeout) {
+long	tek_scope_calculate_no_of_bytes(CLINK *clink, int is_TDS3000, unsigned long timeout) {
 char	cmd[256];
 long	no_acq_points;
 long	no_points;
+double	sample_rate;
 long	start,stop;
 double	xincr, hor_scale;
 
 	no_acq_points = vxi11_obtain_long_value(clink, "HOR:RECORD?");
-	xincr = vxi11_obtain_double_value(clink, "WFMPRE:XINCR?");
 	hor_scale = vxi11_obtain_double_value(clink, "HOR:MAIN:SCALE?");
-	no_points = (long) round((10*hor_scale)/xincr);
+
+	if (is_TDS3000 == 1) {
+		xincr = vxi11_obtain_double_value(clink, "WFMPRE:XINCR?");
+		no_points = (long) round((10*hor_scale)/xincr);
+		}
+	else {
+		sample_rate = vxi11_obtain_double_value(clink, "HOR:MAIN:SAMPLERATE?");
+		no_points = (long) round(sample_rate*10*hor_scale);
+		}
 
 	start = ((no_acq_points - no_points)/2) + 1;
 	stop  = ((no_acq_points + no_points)/2);
@@ -277,16 +315,33 @@ double	xincr, hor_scale;
 
 	}
 
-/* Grabs data from the scope */
+/* Wrapper (backwards compatibility); makes no assumption about whether the
+ * scope is a TDS3000 or DPO/MSO4000 series */
+long	tek_scope_calculate_no_of_bytes(CLINK *clink, unsigned long timeout) {
+	return tek_scope_calculate_no_of_bytes(clink, 1, timeout);
+	}
+
+/* Grabs data from the scope. Wrapper fn, converts a (char) chan to a (char*) source. */
 long	tek_scope_get_data(CLINK *clink, char chan, int clear_sweeps, char *buf, unsigned long buf_len, unsigned long timeout) {
 char	source[20];
+
+	memset(source,0,20);
+	tek_scope_channel_str(chan, source);
+
+	return tek_scope_get_data(clink, source, clear_sweeps, buf, buf_len, timeout);
+	}
+
+/* Grabs data from the scope */
+long	tek_scope_get_data(CLINK *clink, char *source, int clear_sweeps, char *buf, unsigned long buf_len, unsigned long timeout) {
 char	cmd[256];
 int	ret;
 long	bytes_returned;
 long	opc_value;
 
-	memset(source,0,20);
-	tek_scope_channel_str(chan, source);
+	/* Check the string. If it starts with 1-4 or 'm', convert accordingly;
+	 * otherwise leave alone */
+	tek_scope_channel_str(source);
+
 	/* set the source channel */
 	sprintf(cmd,"DATA:SOURCE %s",source);
 	ret=vxi11_send(clink, cmd);
@@ -394,15 +449,55 @@ long	start, stop, no_points;
 	return no_points;
 	}
 
+/* Sets the "record length." Here's where Tek differs from Agilent and LeCroy.
+ * Supposedly (at least on the 4000 series scopes) you can set the sample
+ * rate using "HOR:MAIN:SAMPLERATE" but I've never managed to get this to do
+ * anything. The only way you can influence the sample rate is by changing the
+ * record length. Depending on the timebase, the number of samples you
+ * actually get returned will be less than or equal to the record length you
+ * ask for.
+ * You cannot ask for any arbitrary record length, either. Valid record
+ * lengths are, at time of writing:
+ * - TDS3000 series: 500 or 10,000
+ * - DPO/MSO4000 series: 1000, 10,000, 100,000, 1,000,000 or 10,000,000
+ * This function requests whatever number of points it is passed. It then
+ * asks the scope what the record length actually is, and returns this 
+ * value. */
+long	tek_scope_set_record_length(CLINK *clink, long record_length) {
+char	cmd[256];
+	sprintf(cmd,"HOR:RECORDLENGTH %ld",record_length);
+	vxi11_send(clink,cmd);
+
+	return vxi11_obtain_long_value(clink, "HOR:RECORDLENGTH?");
+	}
+
 /* Returns the sample rate, based on 1/XINCR */
 double	tek_scope_get_sample_rate(CLINK *clink) {
 double	xincr, s_rate;
 
-	xincr  = vxi11_obtain_double_value(clink, "WFMPRE:XINCR?");
-	s_rate = 1 / xincr;
+	if (tek_scope_is_TDS3000(clink) == 1) {
+		xincr  = vxi11_obtain_double_value(clink, "WFMPRE:XINCR?");
+		s_rate = 1 / xincr;
+		}
+	else s_rate = vxi11_obtain_double_value(clink, "HOR:MAIN:SAMPLERATE?");
+
 	return s_rate;
 	}
 
+/* Returns 1 if the scope is a TDS3000 series, 0 otherwise. Used to check on
+ * the availability of the HOR:MAIN:SAMPLERATE? query */
+int	tek_scope_is_TDS3000(CLINK *clink) {
+char	buf[256];
+
+	vxi11_send_and_receive(clink, "*IDN?", buf, 256, VXI11_READ_TIMEOUT);
+
+	if (strncmp("TDS 3",buf+10,5) == 0) return 1;
+	//if (strncmp("MSO40",buf+10,5) == 0) {
+	//	printf("it's a match!\n");
+	//	return 1;
+	//	}
+	return 0;
+	}
 
 /*****************************************************************************
  * Tektronix AFG (abritrary function generator) functions                    *
@@ -445,30 +540,28 @@ int	tek_afg_send_arb(CLINK *clink, char *buf, unsigned long buf_len) {
  * Utility functions. No communication with device, just useful functions    *
  *****************************************************************************/
 
+void	tek_scope_channel_str(char *source) {
+	tek_scope_channel_str(source[0], source);
+	}
+
 void	tek_scope_channel_str(char chan, char *source) {
 	switch(chan) {
-		case 'A' :
-		case 'a' :
-		case 'B' :
-		case 'b' :
-		case 'C' :
-		case 'c' :
-		case 'D' :
-		case 'd' : strcpy(source,"MATH");
+		case 'M' :
+		case 'm' : strncpy(source,"MATH",5);
 			break;
-		case '1' : strcpy(source,"CH1");
+		case '1' : strncpy(source,"CH1",4);
 			break;
-		case '2' : strcpy(source,"CH2");
+		case '2' : strncpy(source,"CH2",4);
 			break;
-		case '3' : strcpy(source,"CH3");
+		case '3' : strncpy(source,"CH3",4);
 			break;
-		case '4' : strcpy(source,"CH4");
+		case '4' : strncpy(source,"CH4",4);
 			break;
-		default  : printf("error: unknown channel '%c', using channel 1\n",chan);
-			   strcpy(source,"CH1");
+		default  : 
 			break;
 		}
 	}
+
 
 void	tek_afg_swap_bytes(char *buf, unsigned long buf_len) {
 char	*tmp;
