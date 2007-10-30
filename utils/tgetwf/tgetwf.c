@@ -1,7 +1,11 @@
-/* $Id: tgetwf.c,v 1.2 2007-06-01 12:02:28 sds Exp $ */
+/* $Id: tgetwf.c,v 1.3 2007-10-30 16:20:21 sds Exp $ */
 
 /*
  * $Log: not supported by cvs2svn $
+ * Revision 1.2  2007/06/01 12:02:28  sds
+ * added ability to set number of points (actually the horizontal
+ * record length).
+ *
  * Revision 1.1  2007/05/17 12:46:08  sds
  * Initial revision
  *
@@ -57,7 +61,7 @@
 #define	FALSE	0
 #endif
 
-BOOL	sc(char*, char*);
+BOOL	sc(const char*, const char*);
 
 int	main(int argc, char *argv[]) {
 
@@ -236,7 +240,7 @@ CLINK		*clink; /* client link (actually a structure contining CLIENT and VXI11_L
 	}
 
 /* string compare (sc) function for parsing... ignore */
-BOOL	sc(char *con,char *var){
+BOOL	sc(const char *con, const char *var){
 	if(strcmp(con,var)==0){
 		return TRUE;
 		}

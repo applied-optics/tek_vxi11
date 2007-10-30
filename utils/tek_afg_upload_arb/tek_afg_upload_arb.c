@@ -1,7 +1,11 @@
-/* $Id: tek_afg_upload_arb.c,v 1.2 2007-05-15 15:10:14 sds Exp $ */
+/* $Id: tek_afg_upload_arb.c,v 1.3 2007-10-30 16:18:14 sds Exp $ */
 
 /*
  * $Log: not supported by cvs2svn $
+ * Revision 1.2  2007/05/15 15:10:14  sds
+ * Changed tek_afg_user library to more generic "tek_user" library.
+ * Accordingly, a couple of library calls got changed, that's all.
+ *
  * Revision 1.1  2006/08/25 10:30:43  sds
  * Initial revision
  *
@@ -51,7 +55,7 @@
 #define	FALSE	0
 #endif
 
-BOOL    sc(char*, char*);
+BOOL    sc(const char*, const char*);
 
 
 
@@ -155,7 +159,7 @@ BOOL	got_file	= FALSE;
 	}
 
 /* string compare (sc) function for parsing... ignore */
-BOOL	sc(char *con,char *var){
+BOOL	sc(const char *con, const char *var){
 	if(strcmp(con,var)==0) return TRUE;
 	return FALSE;
 	}
