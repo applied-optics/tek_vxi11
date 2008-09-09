@@ -1,7 +1,22 @@
-/* $Id: tek_user.h,v 1.5 2007-06-01 12:00:26 sds Exp $ */
+/* $Id: tek_user.h,v 1.6 2008-09-09 14:42:22 sds Exp $ */
 
 /*
  * $Log: not supported by cvs2svn $
+ * Revision 1.5  2007/06/01 12:00:26  sds
+ * Quite a major revision, brought on by finally getting hold of
+ * an MSO4000.
+ * Channels are no longer just char's, otherwise how would you
+ * specify digital channels? Backwards char compatibility is
+ * provided by a few wrapper functions and an improved version
+ * of tek_scope_channel_str().
+ * Added ability to set record length.
+ * Found out that on the 4000 series scopes, there's a new
+ * query HOR:MAIN:SAMPLERATE? which doesn't seem to suffer from
+ * the bloody annoying time lag of XINCR being updated on the
+ * 3000 series. Hence a tek_scope_is_TDS3000() fn to find out
+ * what the scope is, and different ways of getting the actual
+ * number of points, depending on scope model.
+ *
  * Revision 1.4  2007/05/31 13:49:37  sds
  * Added a wrapper fn for tek_scope_write_wfi_file().
  * Added tek_scope_set_for_auto(), tek_scope_get_no_points() and
@@ -57,6 +72,7 @@ int	tek_scope_init(CLINK *clink);
 int	tek_scope_get_setup(CLINK *clink, char* buf, unsigned long buf_len);
 int	tek_scope_send_setup(CLINK *clink, char* buf, unsigned long buf_len);
 long	tek_scope_write_wfi_file(CLINK *clink, char *wfiname, char *captured_by, int no_of_traces, unsigned long timeout);
+long	tek_scope_write_wfi_file(CLINK *clink, char *wfiname, char *source, char *captured_by, int no_of_traces, unsigned long timeout);
 long	tek_scope_write_wfi_file(CLINK *clink, char *wfiname, char chan, char *captured_by, int no_of_traces, unsigned long timeout);
 long	tek_scope_set_for_capture(CLINK *clink, int clear_sweeps, unsigned long timeout);
 long	tek_scope_set_for_capture(CLINK *clink, int clear_sweeps, long record_length, unsigned long timeout);
