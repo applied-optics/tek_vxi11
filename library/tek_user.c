@@ -1,7 +1,22 @@
-/* $Id: tek_user.c,v 1.6 2007-06-01 11:55:48 sds Exp $ */
+/* $Id: tek_user.c,v 1.7 2008-09-09 12:09:57 sds Exp $ */
 
 /*
  * $Log: not supported by cvs2svn $
+ * Revision 1.6  2007/06/01 11:55:48  sds
+ * Quite a major revision, brought on by finally getting hold of
+ * an MSO4000.
+ * Channels are no longer just char's, otherwise how would you
+ * specify digital channels? Backwards char compatibility is
+ * provided by a few wrapper functions and an improved version
+ * of tek_scope_channel_str().
+ * Added ability to set record length.
+ * Found out that on the 4000 series scopes, there's a new
+ * query HOR:MAIN:SAMPLERATE? which doesn't seem to suffer from
+ * the bloody annoying time lag of XINCR being updated on the
+ * 3000 series. Hence a tek_scope_is_TDS3000() fn to find out
+ * what the scope is, and different ways of getting the actual
+ * number of points, depending on scope model.
+ *
  * Revision 1.5  2007/05/31 13:48:38  sds
  * Added a wrapper fn for tek_scope_write_wfi_file().
  * Added tek_scope_set_for_auto(), tek_scope_get_no_points() and
@@ -382,17 +397,22 @@ void	tek_scope_set_for_auto(CLINK *clink) {
 /* Sets the number of averages. Actually it's a bit cleverer than that, and
  * takes a number based on the acquisition mode, namely:
  * num > 1  == average mode, num indicates no of averages
- * num = 0 or 1  == sample mode
+ * num = 1  == hires mode
+ * num = 0  == sample mode
  * num = -1 == peak detect mode
- * num < -1 == envelope mode, (-num) indicates no of envelopes
+ * num < -1 == envelope mode, (-num) indicates no of envelopes (3000 series
+ * only; 4000 series only has infinite no of envelopes).
  * This fn can be used in combination with tek_scope_get_averages which,
  * in combination with this fn, can record the acquisition state and
  * return it to the same. */
 int	tek_scope_set_averages(CLINK *clink, int no_averages) {
 char cmd[256];
 
-	if (no_averages == 1 || no_averages == 0) {
+	if (no_averages == 0) {
 		return vxi11_send(clink, "ACQUIRE:MODE SAMPLE");
+		}
+	if (no_averages == 1) {
+		return vxi11_send(clink, "ACQUIRE:MODE HIRES");
 		}
 	if (no_averages == -1) {
 		return vxi11_send(clink, "ACQUIRE:MODE PEAKDETECT");
@@ -412,9 +432,12 @@ char cmd[256];
 /* Gets the number of averages. Actually it's a bit cleverer than that, and
  * returns a number based on the acquisition mode, namely:
  * result > 1  == average mode, result indicates no of averages
+ * result = 1  == hires mode (4000 series only)
  * result = 0  == sample mode
  * result = -1 == peak detect mode
  * result < -1 == envelope mode, (-result) indicates no of envelopes
+ * (3000 series) or -2 (4000 series, this does not have a "no of envelopes"
+ * value)
  * This fn can be used in combination with tek_scope_set_averages which,
  * in combination with this fn, can record the acquisition state and
  * return it to the same. */
@@ -427,14 +450,23 @@ long	result;
 	/* Sample mode */
 	if (strncmp("SAM",buf,3) == 0) return 0;
 	/* Average mode */
+	if (strncmp("HIR",buf,3) == 0) return 1;
+	/* Average mode */
 	if (strncmp("AVE",buf,3) == 0) {
 		result = vxi11_obtain_long_value(clink, "ACQUIRE:NUMAVG?");
 		return (int) result;
 		}
 	/* Envelope mode */
 	if (strncmp("ENV",buf,3) == 0) {
-		result = vxi11_obtain_long_value(clink, "ACQUIRE:NUMENV?");
-		return (int) -result;
+		vxi11_send_and_receive(clink, "ACQUIRE:NUMENV?", buf, 256, VXI11_READ_TIMEOUT);
+		/* If you query ACQ:NUMENV? on a 4000 series, it returns "INFI".
+		 * This is not a documented feature, we just have to hope that 
+		 * it remains this way. */
+		if (strncmp("INF",buf,3) == 0) return -2;
+		else {
+			result = strtol(buf, (char **)NULL, 10);
+			return (int) -result;
+			}
 		}
 	}
 
