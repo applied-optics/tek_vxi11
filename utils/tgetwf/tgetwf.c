@@ -1,7 +1,11 @@
-/* $Id: tgetwf.c,v 1.3 2007-10-30 16:20:21 sds Exp $ */
+/* $Id: tgetwf.c,v 1.4 2008-09-09 15:29:11 sds Exp $ */
 
 /*
  * $Log: not supported by cvs2svn $
+ * Revision 1.3  2007/10/30 16:20:21  sds
+ * changed char*'s in sc() to const char*'s to get rid of
+ * pedantic gcc warning.
+ *
  * Revision 1.2  2007/06/01 12:02:28  sds
  * added ability to set number of points (actually the horizontal
  * record length).
@@ -112,9 +116,9 @@ CLINK		*clink; /* client link (actually a structure contining CLIENT and VXI11_L
 			got_scope_channel=TRUE;
 			}
 
-		if(sc(argv[index],"-sample_rate")||sc(argv[index],"-s")||sc(argv[index],"-rate")){
-			sscanf(argv[++index],"%lg",&s_rate); /* %g in sscanf is a float, so use %lg for double. %g in printf is a double. Great. */
-			}
+//		if(sc(argv[index],"-sample_rate")||sc(argv[index],"-s")||sc(argv[index],"-rate")){
+//			sscanf(argv[++index],"%lg",&s_rate); /* %g in sscanf is a float, so use %lg for double. %g in printf is a double. Great. */
+//			}
 
 		if(sc(argv[index],"-no_points")||sc(argv[index],"-n")||sc(argv[index],"-points")){
 			sscanf(argv[++index],"%ld",&npoints);
@@ -122,6 +126,33 @@ CLINK		*clink; /* client link (actually a structure contining CLIENT and VXI11_L
 			
 		if(sc(argv[index],"-averages")||sc(argv[index],"-a")||sc(argv[index],"-aver")){
 			sscanf(argv[++index],"%d",&no_averages);
+			if (no_averages == 0 || no_averages == 1) no_averages = 0; /* tek_scope_set_averages() interprets this as "sample mode"*/
+			got_no_averages=TRUE;
+			}
+			
+		if(sc(argv[index],"-sample")||sc(argv[index],"-s")||sc(argv[index],"-sam")){
+			no_averages=0; /* tek_scope_set_averages() interprets this as "sample mode" */
+			got_no_averages=TRUE;
+			}
+
+		if(sc(argv[index],"-hires")||sc(argv[index],"-h")||sc(argv[index],"-hi_res")){
+			no_averages=1; /* tek_scope_set_averages() interprets this as "hires mode" */
+			got_no_averages=TRUE;
+			}
+
+		if(sc(argv[index],"-peak_detect")||sc(argv[index],"-p")||sc(argv[index],"-peak")){
+			no_averages=-1; /* tek_scope_set_averages() interprets this as "peak detect mode" */
+			got_no_averages=TRUE;
+			}
+
+		if(sc(argv[index],"-envelope")||sc(argv[index],"-e")||sc(argv[index],"-env")){
+			no_averages=-2; /* tek_scope_set_averages() interprets this as "envelope mode" */
+			got_no_averages=TRUE;
+			}
+
+		if(sc(argv[index],"-no_envelopes")||sc(argv[index],"-no_e")||sc(argv[index],"-no_envs")){
+			sscanf(argv[++index],"%d",&no_averages);
+			no_averages = -no_averages; /* tek_scope_set_averages() interprets this as "envelope mode with N envelopes (N<infinity for 3000 series only) */
 			got_no_averages=TRUE;
 			}
 			
@@ -149,10 +180,13 @@ CLINK		*clink; /* client link (actually a structure contining CLIENT and VXI11_L
 		printf("-c     -scope_channel  -channel : scope channel (1,2,3,4,M,D0-D15)\n");
 		printf("OPTIONAL ARGUMENTS:\n");
 		printf("-t     -timeout                 : timout (in milliseconds)\n");
-/* Sample rate and no_points not implemented yet */
-//		printf("-s     -sample_rate    -rate    : set sample rate (eg 1e9 = 1GS/s)\n");
 		printf("-n     -no_points      -points  : set maximum no of points\n");
-		printf("-a     -averages       -aver    : set no of averages (<=1 means none)\n");
+		printf("-a     -averages       -aver    : set no of averages (<=1 means sample mode)\n");
+		printf("-p     -peak_detect    -peak    : set to peak detect mode\n");
+		printf("-s     -sample         -sam     : set to sample mode (no averaging)\n");
+		printf("-h     -hires          -hi_res  : set to hires mode\n");
+		printf("-e     -envelope       -env     : set to envelope mode\n");
+		printf("-no_e  -no_envelopes   -no_envs : sets no of envelopes (3000 scopes only)\n");
 		printf("-r     -repeat         -rep     : take 'r' traces (0 means \"until 'q'\")\n");
 		printf("-clsw  -clear_sweeps   -clear   : clear sweeps (if averaging)\n\n");
 		printf("OUTPUTS:\n");
@@ -198,7 +232,23 @@ CLINK		*clink; /* client link (actually a structure contining CLIENT and VXI11_L
 		if (got_no_averages == TRUE) {
 			tek_scope_set_averages(clink, no_averages);
 			actual_no_averages = tek_scope_get_averages(clink);
-			printf("You asked for %d averages. Averages has been set to %d averages.\n", no_averages, actual_no_averages);
+			if (actual_no_averages > 1) {
+				printf("You asked for %d averages. Actual number used will be %d averages.\n", no_averages, actual_no_averages);
+				}
+			if (actual_no_averages == 1) {
+				printf("Hires mode explicitly set\n");
+				}
+			if (actual_no_averages == 0) {
+				printf("Sample mode (no averaging) explicitly set\n");
+				}
+			if (actual_no_averages == -1) {
+				printf("Peak detect mode explicitly set\n");
+				}
+			if (actual_no_averages < -1) {
+				printf("Envelope mode explicitly set. On 4000-series scopes, infinite\n");
+				printf("envelopes will be used. On 3000-series scopes, %d envelopes\n",-actual_no_averages);
+				printf("will be used.\n");
+				}
 			}
 
 	/* Sit in a loop until we're done with taking measurements */
