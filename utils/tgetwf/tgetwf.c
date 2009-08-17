@@ -1,7 +1,12 @@
-/* $Id: tgetwf.c,v 1.4 2008-09-09 15:29:11 sds Exp $ */
+/* $Id: tgetwf.c,v 1.5 2009-08-17 15:30:52 sds Exp $ */
 
 /*
  * $Log: not supported by cvs2svn $
+ * Revision 1.4  2008/09/09 15:29:11  sds
+ * added the -p, -h, -s, -e, and -no_e switches, to allow explicit setting
+ * of peak detect, hires, sample and envelope modes, and (on 3000-series
+ * scopes) the setting of the no of envelopes.
+ *
  * Revision 1.3  2007/10/30 16:20:21  sds
  * changed char*'s in sc() to const char*'s to get rid of
  * pedantic gcc warning.
@@ -80,7 +85,7 @@ char		*buf;
 unsigned long	timeout=10000; /* in ms (= 10 seconds) */
 
 long		bytes_returned;
-BOOL		clear_sweeps=FALSE;
+BOOL		clear_sweeps=TRUE;
 BOOL		got_ip=FALSE;
 BOOL		got_scope_channel=FALSE;
 BOOL		got_file=FALSE;
@@ -164,6 +169,10 @@ CLINK		*clink; /* client link (actually a structure contining CLIENT and VXI11_L
 			clear_sweeps=TRUE;
 			}
 			
+		if(sc(argv[index],"-no_clear_sweeps")||sc(argv[index],"-noclsw")||sc(argv[index],"-no_clear")){
+			clear_sweeps=FALSE;
+			}
+			
 		if(sc(argv[index],"-timeout")||sc(argv[index],"-t")){
 			sscanf(argv[++index],"%lu",&timeout);
 			}
@@ -172,23 +181,24 @@ CLINK		*clink; /* client link (actually a structure contining CLIENT and VXI11_L
 		}
 
 	if(got_file==FALSE||got_ip==FALSE||got_scope_channel==FALSE){
-		printf("%s: grabs a waveform from a Tektronix scope via ethernet, by Steve (May 07)\n",progname);
+		printf("%s: grabs a waveform from a Tektronix scope via ethernet, by Steve (Aug 09)\n",progname);
 		printf("Run using %s [arguments]\n\n",progname);
 		printf("REQUIRED ARGUMENTS:\n");
-		printf("-ip    -ip_address     -IP      : IP address of scope (eg 128.243.74.98)\n");
-		printf("-f     -filename       -file    : filename (without extension)\n");
-		printf("-c     -scope_channel  -channel : scope channel (1,2,3,4,M,D0-D15)\n");
+		printf("-ip     -ip_address     -IP      : IP address of scope (eg 128.243.74.98)\n");
+		printf("-f      -filename       -file    : filename (without extension)\n");
+		printf("-c      -scope_channel  -channel : scope channel (1,2,3,4,M,REF1-REF4,D0-D15)\n");
 		printf("OPTIONAL ARGUMENTS:\n");
-		printf("-t     -timeout                 : timout (in milliseconds)\n");
-		printf("-n     -no_points      -points  : set maximum no of points\n");
-		printf("-a     -averages       -aver    : set no of averages (<=1 means sample mode)\n");
-		printf("-p     -peak_detect    -peak    : set to peak detect mode\n");
-		printf("-s     -sample         -sam     : set to sample mode (no averaging)\n");
-		printf("-h     -hires          -hi_res  : set to hires mode\n");
-		printf("-e     -envelope       -env     : set to envelope mode\n");
-		printf("-no_e  -no_envelopes   -no_envs : sets no of envelopes (3000 scopes only)\n");
-		printf("-r     -repeat         -rep     : take 'r' traces (0 means \"until 'q'\")\n");
-		printf("-clsw  -clear_sweeps   -clear   : clear sweeps (if averaging)\n\n");
+		printf("-t      -timeout                 : timout (in milliseconds)\n");
+		printf("-n      -no_points       -points : set maximum no of points\n");
+		printf("-a      -averages        -aver   : set no of averages (<=1 means sample mode)\n");
+		printf("-p      -peak_detect     -peak   : set to peak detect mode\n");
+		printf("-s      -sample          -sam    : set to sample mode (no averaging)\n");
+		printf("-h      -hires           -hi_res : set to hires mode\n");
+		printf("-e      -envelope        -env    : set to envelope mode\n");
+		printf("-no_e   -no_envelopes    -no_envs: sets no of envelopes (3000 scopes only)\n");
+		printf("-r      -repeat          -rep    : take 'r' traces (0 means \"until 'q'\")\n");
+		printf("-clsw   -clear_sweeps    -clear  : clear sweeps/'single acquisition' mode\n");
+		printf("-noclsw -no_clear_sweeps -noclear: no clear sweeps (if averaging)\n\n");
 		printf("OUTPUTS:\n");
 		printf("filename.wf  : binary data of waveform\n");
 		printf("filename.wfi : waveform information (text)\n\n");
