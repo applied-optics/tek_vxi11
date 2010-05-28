@@ -1,7 +1,12 @@
-/* $Id: tek_user.h,v 1.6 2008-09-09 14:42:22 sds Exp $ */
+/* $Id: tek_user.h,v 1.7 2010-05-28 08:19:09 sds Exp $ */
 
 /*
  * $Log: not supported by cvs2svn $
+ * Revision 1.6  2008/09/09 14:42:22  sds
+ * Bug fix: added in the declaration of the function:
+ * long  tek_scope_write_wfi_file(CLINK *clink, char *wfiname, char *source, ...)
+ * (which I'd forgotten to do).
+ *
  * Revision 1.5  2007/06/01 12:00:26  sds
  * Quite a major revision, brought on by finally getting hold of
  * an MSO4000.
@@ -84,6 +89,8 @@ long	tek_scope_get_data(CLINK *clink, char *source, int clear_sweeps, char *buf,
 void	tek_scope_set_for_auto(CLINK *clink);
 int	tek_scope_set_averages(CLINK *clink, int no_averages);
 int	tek_scope_get_averages(CLINK *clink);
+int	tek_scope_set_segmented_averages(CLINK *clink, int no_averages);
+int	tek_scope_set_segmented(CLINK *clink, int no_segments);
 long	tek_scope_set_record_length(CLINK *clink, long record_length);
 long	tek_scope_get_no_points(CLINK *clink);
 double	tek_scope_get_sample_rate(CLINK *clink);

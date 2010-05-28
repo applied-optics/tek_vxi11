@@ -1,7 +1,20 @@
-/* $Id: tek_user.c,v 1.7 2008-09-09 12:09:57 sds Exp $ */
+/* $Id: tek_user.c,v 1.8 2010-05-28 08:18:48 sds Exp $ */
 
 /*
  * $Log: not supported by cvs2svn $
+ * Revision 1.7  2008/09/09 12:09:57  sds
+ * Refined the set_no_averages() and get_no_averages() fns, to account
+ * for the additional "hi-res" mode on 4000-series scopes, and to also
+ * account for the fact that in envelope mode on 4000-series scopes you
+ * cannot set a finite number of envelopes (like you can on the 3000-
+ * series scopes). On 4000-series scopes, you are only permitted to have
+ * an infinite number of envelopes.
+ * Note this may cause an unintended change of behaviour in some programs,
+ * as the API is broken slightly. In previous versions, setting the no
+ * of averages to either 0 or 1 caused the scope to go into sample mode.
+ * Now, if you set no_averages to be 1, the scope will go into hi-res
+ * mode (setting it to 0 still sets sample mode). CAUTION.
+ *
  * Revision 1.6  2007/06/01 11:55:48  sds
  * Quite a major revision, brought on by finally getting hold of
  * an MSO4000.
@@ -468,6 +481,32 @@ long	result;
 			return (int) -result;
 			}
 		}
+	}
+
+/* Use segmented mode (called "FastFrame" on Tek scopes) to do (relatively)
+ * fast averaging. You can choose a "summary" frame to be the average of all
+ * the segments. In this mode we are not interested in the segments themselves,
+ * just the average. */
+int	tek_scope_set_segmented_averages(CLINK *clink, int no_averages) {
+char	cmd[256];
+int	max_segments;
+
+	max_segments = (int) vxi11_obtain_long_value(clink, "HOR:FASTFRAME:MAXFRAMES?");
+	if (no_averages >= max_segments) no_averages = max_segments - 1;
+	sprintf(cmd, "HOR:FASTFRAME:STATE 1;:HOR:FASTFRAME:SUMFRAME AVERAGE;:HOR:FASTFRAME:COUNT %d;:DATA:FRAMESTART %d;:DATA:FRAMESTOP %d", (no_averages+1), (no_averages+1), (no_averages+1));
+	vxi11_send(clink,cmd);
+	return no_averages;
+	}
+
+int	tek_scope_set_segmented(CLINK *clink, int no_segments) {
+char	cmd[256];
+int	max_segments;
+
+	max_segments = (int) vxi11_obtain_long_value(clink, "HOR:FASTFRAME:MAXFRAMES?");
+	if (no_segments >= max_segments) no_segments = max_segments;
+	sprintf(cmd, "HOR:FASTFRAME:STATE 1;:HOR:FASTFRAME:SUMFRAME NONE;:HOR:FASTFRAME:COUNT %d;:DATA:FRAMESTART 1;:DATA:FRAMESTOP %d", no_segments, no_segments);
+	vxi11_send(clink,cmd);
+	return no_segments;
 	}
 
 /* Returns the actual number of points that will be returned, based on
