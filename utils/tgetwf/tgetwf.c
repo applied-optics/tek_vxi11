@@ -1,7 +1,14 @@
-/* $Id: tgetwf.c,v 1.5 2009-08-17 15:30:52 sds Exp $ */
+/* $Id: tgetwf.c,v 1.6 2010-05-28 08:19:52 sds Exp $ */
 
 /*
  * $Log: not supported by cvs2svn $
+ * Revision 1.5  2009/08/17 15:30:52  sds
+ * Made clear_sweeps=TRUE the default. Makes more sense this way.
+ * Added -noclsw option (causes scope to stay in "run" mode) if you really
+ * want it.
+ * Updated help text to indicate how to acquire from the reference channels
+ * on 4000-series scopes (REF1-REF4).
+ *
  * Revision 1.4  2008/09/09 15:29:11  sds
  * added the -p, -h, -s, -e, and -no_e switches, to allow explicit setting
  * of peak detect, hires, sample and envelope modes, and (on 3000-series
@@ -90,6 +97,9 @@ BOOL		got_ip=FALSE;
 BOOL		got_scope_channel=FALSE;
 BOOL		got_file=FALSE;
 BOOL		got_no_averages=FALSE;
+BOOL		got_segmented_averages=FALSE;
+BOOL		got_segmented=FALSE;
+int		no_segments, actual_no_segments;
 int		no_averages, actual_no_averages;
 int		count=0;
 int		repeat=1;
@@ -133,6 +143,16 @@ CLINK		*clink; /* client link (actually a structure contining CLIENT and VXI11_L
 			sscanf(argv[++index],"%d",&no_averages);
 			if (no_averages == 0 || no_averages == 1) no_averages = 0; /* tek_scope_set_averages() interprets this as "sample mode"*/
 			got_no_averages=TRUE;
+			}
+			
+		if(sc(argv[index],"-seg_averages")||sc(argv[index],"-sa")||sc(argv[index],"-seg_aver")){
+			sscanf(argv[++index],"%d",&no_averages);
+			got_segmented_averages=TRUE;
+			}
+			
+		if(sc(argv[index],"-segmented")||sc(argv[index],"-seg")||sc(argv[index],"-fast")){
+			sscanf(argv[++index],"%d",&no_segments);
+			got_segmented=TRUE;
 			}
 			
 		if(sc(argv[index],"-sample")||sc(argv[index],"-s")||sc(argv[index],"-sam")){
@@ -191,6 +211,8 @@ CLINK		*clink; /* client link (actually a structure contining CLIENT and VXI11_L
 		printf("-t      -timeout                 : timout (in milliseconds)\n");
 		printf("-n      -no_points       -points : set maximum no of points\n");
 		printf("-a      -averages        -aver   : set no of averages (<=1 means sample mode)\n");
+		printf("-sa     -seg_averages    -seg_aver:set no of averages (segmented mode)\n");
+		printf("-seg    -segmented       -fast   : set segmented (FastFrame) mode\n");
 		printf("-p      -peak_detect     -peak   : set to peak detect mode\n");
 		printf("-s      -sample          -sam    : set to sample mode (no averaging)\n");
 		printf("-h      -hires           -hi_res : set to hires mode\n");
@@ -235,6 +257,12 @@ CLINK		*clink; /* client link (actually a structure contining CLIENT and VXI11_L
 
 	/* Set up the scope. This function also returns the no of bytes needed */
 		buf_size = tek_scope_set_for_capture(clink, clear_sweeps, timeout);
+		if(got_segmented == TRUE) {
+			buf_size = buf_size * no_segments;
+			actual_no_segments = tek_scope_set_segmented(clink, no_segments);
+			printf("You asked for %d segments. Actual number used will be %d segments.\n", no_segments, actual_no_segments);
+			}
+			
 		buf=new char[buf_size];
 
 	/* If we've specified the number of averages, then set it. Otherwise, just
@@ -259,6 +287,11 @@ CLINK		*clink; /* client link (actually a structure contining CLIENT and VXI11_L
 				printf("envelopes will be used. On 3000-series scopes, %d envelopes\n",-actual_no_averages);
 				printf("will be used.\n");
 				}
+			}
+
+		if (got_segmented_averages == TRUE) {
+			actual_no_averages = tek_scope_set_segmented_averages(clink, no_averages);
+			printf("You asked for %d segmented averages. Actual number used will be %d averages.\n", no_averages, actual_no_averages);
 			}
 
 	/* Sit in a loop until we're done with taking measurements */
