@@ -41,6 +41,10 @@
  * The author's email address is steve.sharples@nottingham.ac.uk
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "../../library/tek_user.h"
 #define BUF_LEN 30000
 
@@ -55,8 +59,6 @@ FILE	*fo;
 long	bytes_returned;
 CLINK	*clink;
 
-	clink = new CLINK;
-
 	if (argc != 3) {
 		printf("usage: %s www.xxx.yyy.zzz filename.tss\n",argv[0]);
 		printf("Saves the current Tektronix scope setup as a .tss (Tek Scope Setup) file\n");
@@ -67,7 +69,8 @@ CLINK	*clink;
 
 	fo=fopen(filename,"w");
 	if (fo > 0) {
-		if (tek_open(device_ip, clink) != 0) {
+		clink = tek_open(device_ip);
+		if (!clink){
 			printf("Quitting...\n");
 			exit(2);
 			}

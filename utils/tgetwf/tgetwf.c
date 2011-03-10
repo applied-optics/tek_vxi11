@@ -68,6 +68,9 @@
  * The author's email address is steve.sharples@nottingham.ac.uk
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "../../library/tek_user.h"
 
 #ifndef	BOOL
@@ -116,7 +119,6 @@ long		actual_npoints;
 
 CLINK		*clink; /* client link (actually a structure contining CLIENT and VXI11_LINK pointers) */
 
-	clink = new CLINK; /* allocate some memory */
 	progname = argv[0];
 
 	while(index<argc){
@@ -241,7 +243,8 @@ CLINK		*clink; /* client link (actually a structure contining CLIENT and VXI11_L
 	 * First we open the device, referenced by an IP address, and obtain
 	 * a client id, and a link id, all contained in a "CLINK" structure.  Each
 	 * client can have more than one link. For simplicity we bundle them together. */
-		if (tek_open(device_ip,clink) != 0) { // could also use "vxi11_open_device()"
+		clink = tek_open(device_ip);
+		if (!clink) { // could also use "vxi11_open_device()"
 			printf("Quitting...\n");
 			exit(2);
 			}

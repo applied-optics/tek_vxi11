@@ -39,6 +39,9 @@
  * The author's email address is steve.sharples@nottingham.ac.uk
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "../../library/tek_user.h"
 
 #ifndef	BOOL
@@ -65,7 +68,6 @@ BOOL	setup_clink=FALSE;
 	/* This is the default IP, and as this command previously used this as
 	 * default it is retained here in order not to break any old scripts */
 	strncpy(device_ip,"128.243.74.108",25);
-	clink = new CLINK; /* allocate some memory */
 
 
 	for(i=1;i<argc;i++){
@@ -93,7 +95,8 @@ BOOL	setup_clink=FALSE;
 			// whether we got an IP address or not, now is the time to open
 			// the device, as sooner or later we're going to send a command
 			if (setup_clink==FALSE) {
-				if (tek_open(device_ip,clink) != 0) {
+				clink = tek_open(device_ip);
+				if (!clink){
 					printf("Quitting...\n");
 					exit(2);
 					}
@@ -115,7 +118,8 @@ BOOL	setup_clink=FALSE;
 			// this catchall is in case no IP is specified (in which case default IP
 			// will be used) AND we have no options, e.g: "tek_arb E:1:ON"
 			if (setup_clink==FALSE) {
-				if (tek_open(device_ip,clink) != 0) {
+				clink = tek_open(device_ip);
+				if (!clink){
 					printf("Quitting...\n");
 					exit(2);
 					}

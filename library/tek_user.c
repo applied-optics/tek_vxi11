@@ -82,6 +82,9 @@
  * The author's email address is steve.sharples@nottingham.ac.uk
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "tek_user.h"
 
 /*****************************************************************************
@@ -90,8 +93,8 @@
 
 /* This really is just a wrapper. Only here because folk might be uncomfortable
  * using commands from the vxi11_user library directly! */
-int	tek_open(char *ip, CLINK *clink) {
-	return vxi11_open_device(ip, clink);
+CLINK *tek_open(char *ip) {
+	return vxi11_open_device(ip);
 	}
 
 /* Again, just a wrapper */

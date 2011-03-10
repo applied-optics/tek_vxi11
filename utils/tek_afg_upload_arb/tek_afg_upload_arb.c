@@ -47,6 +47,9 @@
  * The author's email address is steve.sharples@nottingham.ac.uk
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "../../library/tek_user.h"
 
 #ifndef	BOOL
@@ -88,7 +91,6 @@ BOOL	got_ip		= FALSE;
 BOOL	got_file	= FALSE;
 
 	progname	= argv[0];
-	clink = new CLINK; /* allocate some memory */
 
 	while(index<argc){
 		if(sc(argv[index],"-filename")||sc(argv[index],"-f")||sc(argv[index],"-file")){
@@ -139,7 +141,8 @@ BOOL	got_file	= FALSE;
 		bytes_returned=fread(buf, sizeof(char),BUF_LEN,fi);
 		fclose(fi);
 
-		if (tek_open(device_ip,clink) != 0) {
+		clink = tek_open(device_ip);
+		if (!clink){
 			printf("Quitting...\n");
 			exit(2);
 			}

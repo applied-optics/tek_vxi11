@@ -41,6 +41,10 @@
  * The author's email address is steve.sharples@nottingham.ac.uk
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "../../library/tek_user.h"
 #define BUF_LEN 30000
 
@@ -55,8 +59,6 @@ FILE	*fi;
 long	bytes_returned;
 CLINK	*clink;
 
-	clink = new CLINK;
-
 	if (argc != 3) {
 		printf("usage: %s www.xxx.yyy.zzz filename.tss\n",argv[0]);
 		printf("Uploads the .tss (Tek Scope Setup) file to a Tektronix scope\n");
@@ -69,7 +71,8 @@ CLINK	*clink;
 	if (fi > 0) {
 		bytes_returned=fread((char*)buf, sizeof(char),BUF_LEN,fi);
 		fclose(fi);
-		if (tek_open(device_ip,clink) != 0) {
+		clink = tek_open(device_ip);
+		if (!clink){
 			printf("Quitting...\n");
 			exit(2);
 			}

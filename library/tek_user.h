@@ -71,11 +71,11 @@
  * The author's email address is steve.sharples@nottingham.ac.uk
  */
 
-#include "../../vxi11/vxi11_user.h"
+#include "vxi11_user.h"
 #include <math.h>
 #include <unistd.h>
 
-int	tek_open(char *ip, CLINK *clink);
+CLINK *tek_open(char *ip);
 int	tek_close(char *ip, CLINK *clink);
 int	tek_scope_init(CLINK *clink);
 int	tek_scope_get_setup(CLINK *clink, char* buf, unsigned long buf_len);
