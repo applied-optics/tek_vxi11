@@ -5,7 +5,7 @@ include ../../config.mk
 all:	tgetwf
 
 tgetwf: tgetwf.o tek_user.o
-	$(CXX) $(CFLAGS) -o $@ $^ -lvxi11
+	$(CXX) -o $@ $^ -lvxi11 $(LDFLAGS)
 
 tgetwf.o: tgetwf.c
 	$(CXX) $(CFLAGS) -c $^ -o $@

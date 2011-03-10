@@ -5,13 +5,13 @@ include ../../config.mk
 all:	tek_load_setup tek_save_setup
 
 tek_load_setup: tek_load_setup.o tek_user.o
-	$(CXX) $(CFLAGS) -o $@ $^ -lvxi11
+	$(CXX) -o $@ $^ -lvxi11 $(LDFLAGS)
 
 tek_load_setup.o: tek_load_setup.c
 	$(CXX) $(CFLAGS) -c $^ -o $@
 
 tek_save_setup: tek_save_setup.o tek_user.o 
-	$(CXX) $(CFLAGS) -o $@ $^ -lvxi11
+	$(CXX) -o $@ $^ -lvxi11 $(LDFLAGS)
 
 tek_save_setup.o: tek_save_setup.c
 	$(CXX) $(CFLAGS) -c $^ -o $@
