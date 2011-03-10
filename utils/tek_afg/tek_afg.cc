@@ -12,6 +12,7 @@
 
 /* tek_afg.c
  * Copyright (C) 2008 Matt Clark and Steve Sharples
+ * Copyright (C) 2011 Roger Light
  *
  * Command line utility to set various waveform parameters of a Tektronix
  * AFG3000 series arbitrary/function generator. You also have the option of
