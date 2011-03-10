@@ -5,13 +5,13 @@ include ../../config.mk
 all:	tek_afg_upload_arb
 
 tek_afg_upload_arb: tek_afg_upload_arb.o tek_user.o 
-	$(CXX) $(CFLAGS) -o tek_afg_upload_arb tek_afg_upload_arb.o tek_user.o -lvxi11
+	$(CXX) $(CFLAGS) -o $@ $^ -lvxi11
 
-tek_afg_upload_arb.o: tek_afg_upload_arb.c ../../library/tek_user.c
-	$(CXX) $(CFLAGS) -c tek_afg_upload_arb.c -o tek_afg_upload_arb.o
+tek_afg_upload_arb.o: tek_afg_upload_arb.c
+	$(CXX) $(CFLAGS) -c $^ -o $@.o
 
 tek_user.o:	../../library/tek_user.c
-	$(CXX) $(CFLAGS) -c ../../library/tek_user.c -o tek_user.o
+	$(CXX) $(CFLAGS) -c $^ -o $@.o
 
 clean:
 	rm -f *.o tek_afg_upload_arb *.arb
