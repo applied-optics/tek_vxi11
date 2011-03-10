@@ -7,7 +7,7 @@ all:	tek_afg
 tek_afg: tek_afg.o
 	$(CXX) -o $@ $^ ../../library/libtek_user.so.0 $(LDFLAGS)
 
-tek_afg.o: tek_afg.c
+tek_afg.o: tek_afg.cc
 	$(CXX) $(CFLAGS) -c $^ -o $@
 
 clean:

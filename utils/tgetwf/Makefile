@@ -7,7 +7,7 @@ all:	tgetwf
 tgetwf: tgetwf.o
 	$(CXX) -o $@ $^ ../../library/libtek_user.so.0 $(LDFLAGS)
 
-tgetwf.o: tgetwf.c
+tgetwf.o: tgetwf.cc
 	$(CXX) $(CFLAGS) -c $^ -o $@
 
 clean:

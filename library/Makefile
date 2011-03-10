@@ -7,10 +7,10 @@ all : libtek_user.so.0
 libtek_user.so.0 : tek_user.o
 	$(CXX) -shared -Wl,-soname,libtek_user.so.0 $^ -o $@ -lvxi11
 
-tek_user.o: tek_user.c tek_user.h
+tek_user.o: tek_user.cc tek_user.h
 	$(CXX) -fPIC $(CFLAGS) -c $< -o $@
 
-TAGS: $(wildcard *.c) $(wildcard *.h) $(wildcard *.c)
+TAGS: $(wildcard *.cc) $(wildcard *.h)
 	etags $^
 
 clean:

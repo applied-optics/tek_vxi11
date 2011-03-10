@@ -7,13 +7,13 @@ all:	tek_load_setup tek_save_setup
 tek_load_setup: tek_load_setup.o
 	$(CXX) -o $@ $^ ../../library/libtek_user.so.0 $(LDFLAGS)
 
-tek_load_setup.o: tek_load_setup.c
+tek_load_setup.o: tek_load_setup.cc
 	$(CXX) $(CFLAGS) -c $^ -o $@
 
 tek_save_setup: tek_save_setup.o
 	$(CXX) -o $@ $^ ../../library/libtek_user.so.0 $(LDFLAGS)
 
-tek_save_setup.o: tek_save_setup.c
+tek_save_setup.o: tek_save_setup.cc
 	$(CXX) $(CFLAGS) -c $^ -o $@
 
 clean:
