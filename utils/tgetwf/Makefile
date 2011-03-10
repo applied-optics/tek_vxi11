@@ -1,7 +1,8 @@
-CFLAGS = -g
+include ../../config.mk
+
+.PHONY:	all clean install
 
 all:	tgetwf
-.PHONY:	all clean install
 
 tgetwf: tgetwf.o tek_user.o vxi11_user.o vxi11_clnt.o vxi11_xdr.o
 	g++ $(CFLAGS) -o tgetwf tgetwf.o tek_user.o vxi11_user.o vxi11_clnt.o vxi11_xdr.o

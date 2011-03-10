@@ -1,8 +1,8 @@
-CFLAGS = -g
+include ../../config.mk
 
+.PHONY:	all clean install
 
 all:	tek_afg_upload_arb
-.PHONY:	all clean install
 
 tek_afg_upload_arb: tek_afg_upload_arb.o tek_user.o vxi11_user.o vxi11_clnt.o vxi11_xdr.o
 	g++ $(CFLAGS) -o tek_afg_upload_arb tek_afg_upload_arb.o tek_user.o vxi11_user.o vxi11_clnt.o vxi11_xdr.o
