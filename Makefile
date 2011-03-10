@@ -1,5 +1,6 @@
-MAKE=make
-DIRS=utils
+include config.mk
+
+DIRS=library utils
 
 .PHONY : all clean install
 
