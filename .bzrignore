@@ -1,3 +1,10 @@
 build/
 *.wf
 *.wfi
+library/libtek_user.so.0
+utils/tek_afg/tek_afg
+utils/tek_afg_upload_arb/tek_afg_upload_arb
+utils/tek_load_save_setup/tek_load_setup
+utils/tek_load_save_setup/tek_save_setup
+utils/tgetwf/tgetwf
+
