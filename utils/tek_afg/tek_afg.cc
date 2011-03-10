@@ -90,7 +90,7 @@ int	main(int argc, char *argv[]) {
 			verbose++;
 		}else if(!strcmp(argv[i], "-q")){
 			verbose--;
-		}else if(!strcmp(argv[i], "-ip")){
+		}else if(!strcmp(argv[i], "-ip") || !strcmp(argv[i], "-usb")){
 			device_ip = strdup(argv[++i]);
 		}else if(!strcmp(argv[i], "-d")){
 			if(cmd_add(argv[++i])){
@@ -171,6 +171,7 @@ void printhelp(void){
 	printf("\nTektronix AFG 3252 control program\n");
 	printf("GPL Matt 2008\n");
 	printf("Usage: tek_afg [-ip www.xxx.yyy.zzz] [options] <commands>\n");
+	printf("Usage: tek_afg [-usb USBX::0xXXXX...] [options] <commands>\n");
 	printf("If IP is to be specified, it must be done before options or commands,\n");
 	printf("if not specified then default will be used (128.243.74.108).\n\n");
 	printf("Options:\n");
