@@ -5,7 +5,7 @@ include ../../config.mk
 all:	tek_afg
 
 tek_afg: tek_afg.o
-	$(CXX) -o $@ $^ ../../library/libtek_user.so.0 $(LDFLAGS)
+	$(CXX) -o $@ $^ -lvxi11 $(LDFLAGS)
 
 tek_afg.o: tek_afg.cc
 	$(CXX) $(CFLAGS) -c $^ -o $@

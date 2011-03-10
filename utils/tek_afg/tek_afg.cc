@@ -43,7 +43,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../../library/tek_user.h"
+#include "vxi11_user.h"
 
 char **cmds = NULL;
 int cmd_count = 0;
@@ -151,7 +151,7 @@ int	main(int argc, char *argv[]) {
 		device_ip = strdup("128.243.74.108");
 	}
 
-	clink = tek_open(device_ip);
+	clink = vxi11_open_device(device_ip);
 	if (!clink){
 		printf("Error opening device...\n");
 		exit(2);
@@ -160,7 +160,7 @@ int	main(int argc, char *argv[]) {
 	for(i=0; i<cmd_count; i++){
 		vxi11_send(clink, cmds[i]);
 	}
-	tek_close(device_ip, clink);
+	vxi11_close_device(device_ip, clink);
 }
 
 void printhelp(void){
