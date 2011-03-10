@@ -45,6 +45,10 @@
 #include <string.h>
 #include "vxi11_user.h"
 
+#ifndef snprintf
+#define snprintf sprintf_s
+#endif
+
 char **cmds = NULL;
 int cmd_count = 0;
 
