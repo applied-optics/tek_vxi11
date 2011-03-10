@@ -1,7 +1,10 @@
-/* $Id: tgetwf.c,v 1.6 2010-05-28 08:19:52 sds Exp $ */
+/* $Id: tgetwf.c,v 1.6 2010/05/28 08:19:52 sds Exp rjs $ */
 
 /*
- * $Log: not supported by cvs2svn $
+ * $Log: tgetwf.c,v $
+ * Revision 1.6  2010/05/28 08:19:52  sds
+ * Added a couple of segmented memory commands (dpo7000). Probably buggy.
+ *
  * Revision 1.5  2009/08/17 15:30:52  sds
  * Made clear_sweeps=TRUE the default. Makes more sense this way.
  * Added -noclsw option (causes scope to stay in "run" mode) if you really
@@ -103,12 +106,14 @@ int		no_segments, actual_no_segments;
 int		no_averages, actual_no_averages;
 int		count=0;
 int		repeat=1;
+int		no_traces_acquired;
 char		ch;
 int		index=1;
 double		s_rate=0;
 long		npoints=0;
 double		actual_s_rate;
 long		actual_npoints;
+
 CLINK		*clink; /* client link (actually a structure contining CLIENT and VXI11_LINK pointers) */
 
 	clink = new CLINK; /* allocate some memory */
@@ -212,7 +217,7 @@ CLINK		*clink; /* client link (actually a structure contining CLIENT and VXI11_L
 		printf("-n      -no_points       -points : set maximum no of points\n");
 		printf("-a      -averages        -aver   : set no of averages (<=1 means sample mode)\n");
 		printf("-sa     -seg_averages    -seg_aver:set no of averages (segmented mode)\n");
-		printf("-seg    -segmented       -fast   : set segmented (FastFrame) mode\n");
+		printf("-seg    -segmented       -fast   : set no of segments in segmented (FastFrame) mode\n");
 		printf("-p      -peak_detect     -peak   : set to peak detect mode\n");
 		printf("-s      -sample          -sam    : set to sample mode (no averaging)\n");
 		printf("-h      -hires           -hi_res : set to hires mode\n");
@@ -259,9 +264,15 @@ CLINK		*clink; /* client link (actually a structure contining CLIENT and VXI11_L
 		buf_size = tek_scope_set_for_capture(clink, clear_sweeps, timeout);
 		if(got_segmented == TRUE) {
 			buf_size = buf_size * no_segments;
-			actual_no_segments = tek_scope_set_segmented(clink, no_segments);
-			printf("You asked for %d segments. Actual number used will be %d segments.\n", no_segments, actual_no_segments);
+			no_traces_acquired =no_segments;
+			printf("You asked for %d segments.\n", no_segments);
+			if (clear_sweeps==TRUE) {//added this to try and fix noclsw issue
+				actual_no_segments = tek_scope_set_segmented(clink, no_segments);
+				printf("Actual number used will be %d segments.\n", actual_no_segments);
+				no_traces_acquired = actual_no_segments;
 			}
+			
+		}
 			
 		buf=new char[buf_size];
 
@@ -289,7 +300,7 @@ CLINK		*clink; /* client link (actually a structure contining CLIENT and VXI11_L
 				}
 			}
 
-		if (got_segmented_averages == TRUE) {
+		if (got_segmented_averages == TRUE) { 
 			actual_no_averages = tek_scope_set_segmented_averages(clink, no_averages);
 			printf("You asked for %d segmented averages. Actual number used will be %d averages.\n", no_averages, actual_no_averages);
 			}
@@ -314,12 +325,15 @@ CLINK		*clink; /* client link (actually a structure contining CLIENT and VXI11_L
 				if (ch == 'q') repeat=count;
 				}
 			} while (count != repeat);
-		if (count > 1) printf("A total of %d traces were acquired.\n",count);
+		if (got_segmented == FALSE) {
+			no_traces_acquired = count;
+			if (no_traces_acquired > 1) printf("A total of %d traces were acquired.\n",no_traces_acquired);
+			}
 		fclose(f_wf);
 		delete[] buf;
 
 	/* Here we gather waveform information and write the wfi file */
-		tek_scope_write_wfi_file(clink, wfiname, progname, count, timeout);
+		tek_scope_write_wfi_file(clink, wfiname, progname, no_traces_acquired, timeout);
 
 	/* Finally we sever the link to the client. */
 		tek_close(device_ip,clink); // could also use "vxi11_close_device()"

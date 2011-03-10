@@ -1,7 +1,10 @@
-/* $Id: tek_user.c,v 1.8 2010-05-28 08:18:48 sds Exp $ */
+/* $Id: tek_user.c,v 1.8 2010/05/28 08:18:48 sds Exp rjs $ */
 
 /*
- * $Log: not supported by cvs2svn $
+ * $Log: tek_user.c,v $
+ * Revision 1.8  2010/05/28 08:18:48  sds
+ * Added a couple of segmented memory functions. Probably buggy.
+ *
  * Revision 1.7  2008/09/09 12:09:57  sds
  * Refined the set_no_averages() and get_no_averages() fns, to account
  * for the additional "hi-res" mode on 4000-series scopes, and to also
@@ -246,8 +249,8 @@ int	is_TDS3000;
 	 * over and over again. (If it's a TDS3000, then we've already done
 	 * this anyway in the pratting around waiting for XINCR to update). */
 	else if (clear_sweeps == 0) {
-		vxi11_send(clink, "ACQUIRE:STOPAFTER RUNSTOP;:ACQUIRE:STATE 1");
-		value = vxi11_obtain_long_value(clink, "*OPC?", timeout);
+		vxi11_send(clink, "ACQUIRE:STATE 0"); //RJS removed the runsrop command and changed STATE 1 to STATE 0 to get segmented noclsw to work correctly. it was breaking repeated runs of clsw and noclsw
+		value = vxi11_obtain_long_value(clink, "*OPC?", timeout);	//hopefully this wont break anything else!
 		}
 
 	no_bytes = tek_scope_calculate_no_of_bytes(clink, is_TDS3000, timeout);
@@ -490,22 +493,52 @@ long	result;
 int	tek_scope_set_segmented_averages(CLINK *clink, int no_averages) {
 char	cmd[256];
 int	max_segments;
+long	opc_value;
 
-	max_segments = (int) vxi11_obtain_long_value(clink, "HOR:FASTFRAME:MAXFRAMES?");
+	/* See tek_scope_set_segmented() below for explanation of steps here */
+	vxi11_send(clink,"HOR:FASTFRAME:STATE 0");
+	opc_value = vxi11_obtain_long_value(clink, "*OPC?");
+	//usleep(400000);
+	vxi11_send(clink,"ACQUIRE:STOPAFTER SEQUENCE;:ACQUIRE:STATE 1");
+	opc_value = vxi11_obtain_long_value(clink, "*OPC?");
+	//usleep(400000);
+	max_segments = (int) vxi11_obtain_long_value(clink, "HOR:FASTFRAME:STATE 1;:HOR:FASTFRAME:MAXFRAMES?");
 	if (no_averages >= max_segments) no_averages = max_segments - 1;
-	sprintf(cmd, "HOR:FASTFRAME:STATE 1;:HOR:FASTFRAME:SUMFRAME AVERAGE;:HOR:FASTFRAME:COUNT %d;:DATA:FRAMESTART %d;:DATA:FRAMESTOP %d", (no_averages+1), (no_averages+1), (no_averages+1));
+	sprintf(cmd, "HOR:FASTFRAME:SUMFRAME AVERAGE;:HOR:FASTFRAME:COUNT %d;:DATA:FRAMESTART %d;:DATA:FRAMESTOP %d", (no_averages+1), (no_averages+1), (no_averages+1));
 	vxi11_send(clink,cmd);
+	usleep(400000);
 	return no_averages;
 	}
 
 int	tek_scope_set_segmented(CLINK *clink, int no_segments) {
 char	cmd[256];
 int	max_segments;
+long	opc_value;
 
-	max_segments = (int) vxi11_obtain_long_value(clink, "HOR:FASTFRAME:MAXFRAMES?");
+
+	/* Setting the scope into fastframe (segmented) mode involves getting
+	 * around a few foibles. In order to guarantee that when we ask for the
+	 * data we get the number of traces we ask for (rather than a random
+	 * number, usually <2000) we have to:
+	 * (1) Turn fastframe off
+	 * (2) Do the equivalent of pressing the "single" button
+	 * (3) Turn fastframe on
+	 * (4) Work out how many segments we can grab, set the desired number etc
+	 * (5) Wait for 400 milliseconds (ref: DPO7000 series programmer's manual, HOR:FASTFRAME:STATE cmd)
+	 * Failure to do (1-2) or (5) will result in incomplete acquisition,
+	 * following a transition from RUNSTOP mode to Fastframe mode. */
+
+	vxi11_send(clink,"HOR:FASTFRAME:STATE 0");
+	opc_value = vxi11_obtain_long_value(clink, "*OPC?");
+	usleep(1000000);
+	vxi11_send(clink,"ACQUIRE:STOPAFTER SEQUENCE;:ACQUIRE:STATE 1");
+	opc_value = vxi11_obtain_long_value(clink, "*OPC?");
+	usleep(1000000);
+	max_segments = (int) vxi11_obtain_long_value(clink, "HOR:FASTFRAME:STATE 1;:HOR:FASTFRAME:MAXFRAMES?");
 	if (no_segments >= max_segments) no_segments = max_segments;
-	sprintf(cmd, "HOR:FASTFRAME:STATE 1;:HOR:FASTFRAME:SUMFRAME NONE;:HOR:FASTFRAME:COUNT %d;:DATA:FRAMESTART 1;:DATA:FRAMESTOP %d", no_segments, no_segments);
+	sprintf(cmd, "HOR:FASTFRAME:SUMFRAME NONE;:HOR:FASTFRAME:COUNT %d;:DATA:FRAMESTART 1;:DATA:FRAMESTOP %d", no_segments, no_segments);
 	vxi11_send(clink,cmd);
+	usleep(500000);
 	return no_segments;
 	}
 

@@ -1,0 +1,36 @@
+CFLAGS = -g
+
+all:	tek_load_setup tek_save_setup
+.PHONY:	all clean install
+
+tek_load_setup: tek_load_setup.o tek_user.o vxi11_user.o vxi11_clnt.o vxi11_xdr.o
+	g++ $(CFLAGS) -o tek_load_setup tek_load_setup.o tek_user.o vxi11_user.o vxi11_clnt.o vxi11_xdr.o
+
+tek_load_setup.o: tek_load_setup.c ../../library/tek_user.c ../../../vxi11/vxi11_user.cc ../../../vxi11/vxi11.h
+	g++ $(CFLAGS) -c tek_load_setup.c -o tek_load_setup.o
+
+tek_save_setup: tek_save_setup.o tek_user.o vxi11_user.o vxi11_clnt.o vxi11_xdr.o
+	g++ $(CFLAGS) -o tek_save_setup tek_save_setup.o tek_user.o vxi11_user.o vxi11_clnt.o vxi11_xdr.o
+
+tek_save_setup.o: tek_save_setup.c ../../library/tek_user.c ../../../vxi11/vxi11_user.cc ../../../vxi11/vxi11.h
+	g++ $(CFLAGS) -c tek_save_setup.c -o tek_save_setup.o
+
+tek_user.o:	../../library/tek_user.c
+	g++ $(CFLAGS) -c ../../library/tek_user.c -o tek_user.o
+
+vxi11_user.o: ../../../vxi11/vxi11_user.cc ../../../vxi11/vxi11.h
+	g++ $(CLFAGS) -c ../../../vxi11/vxi11_user.cc -o vxi11_user.o 
+
+vxi11_clnt.o: ../../../vxi11/vxi11_clnt.c
+	g++ $(CLFAGS) -c ../../../vxi11/vxi11_clnt.c -o vxi11_clnt.o
+
+vxi11_xdr.o: ../../../vxi11/vxi11_xdr.c
+	g++ $(CLFAGS) -c ../../../vxi11/vxi11_xdr.c -o vxi11_xdr.o
+
+clean:
+	rm -f *.o tek_load_setup tek_save_setup *.tss
+
+install:
+	cp -f tek_load_setup /usr/local/bin
+	cp -f tek_save_setup /usr/local/bin
+

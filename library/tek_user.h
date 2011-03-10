@@ -1,7 +1,10 @@
-/* $Id: tek_user.h,v 1.7 2010-05-28 08:19:09 sds Exp $ */
+/* $Id: tek_user.h,v 1.7 2010/05/28 08:19:09 sds Exp rjs $ */
 
 /*
- * $Log: not supported by cvs2svn $
+ * $Log: tek_user.h,v $
+ * Revision 1.7  2010/05/28 08:19:09  sds
+ * Added a couple of segmented memory functions. Probably buggy.
+ *
  * Revision 1.6  2008/09/09 14:42:22  sds
  * Bug fix: added in the declaration of the function:
  * long  tek_scope_write_wfi_file(CLINK *clink, char *wfiname, char *source, ...)
@@ -70,6 +73,7 @@
 
 #include "../../vxi11/vxi11_user.h"
 #include <math.h>
+#include <unistd.h>
 
 int	tek_open(char *ip, CLINK *clink);
 int	tek_close(char *ip, CLINK *clink);

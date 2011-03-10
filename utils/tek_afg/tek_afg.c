@@ -1,7 +1,13 @@
-/* $Id: tek_afg.c,v 1.3 2008-09-03 15:14:30 sds Exp $ */
+/* $Id: tek_afg.c,v 1.3 2008/09/03 15:14:30 sds Exp $ */
 
 /*
- * $Log: not supported by cvs2svn $
+ * $Log: tek_afg.c,v $
+ * Revision 1.3  2008/09/03 15:14:30  sds
+ * Removed the hard-wiring of instrument IP. Still defaults to the
+ * original hard-wired IP if none is specified.
+ * Tidied up the help screen.
+ * Added GPL and other sundries.
+ *
  */
 
 /* tek_afg.c
