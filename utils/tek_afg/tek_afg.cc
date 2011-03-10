@@ -44,87 +44,55 @@
 #include <string.h>
 #include "../../library/tek_user.h"
 
-#ifndef	BOOL
-#define	BOOL	int
-#endif
-#ifndef	TRUE
-#define	TRUE	1
-#endif
-#ifndef	FALSE
-#define	FALSE	0
-#endif
+char **cmds = NULL;
+int cmd_count = 0;
 
 void printhelp(void);
 
+int cmd_add(const char *cmd)
+{
+	cmd_count++;
+	cmds = (char **)realloc(cmds, cmd_count*sizeof(char *));
+	if(!cmds){
+		printf("Out of memory\n");
+		return 1;
+	}
+	cmds[cmd_count-1] = strdup(cmd);
+	if(!cmds[cmd_count-1]){
+		printf("Out of memory\n");
+		return 1;
+	}
+	return 0;
+}
+
 int	main(int argc, char *argv[]) {
+	char *device_ip = NULL;
+	CLINK *clink = NULL;
+	int i, channel, verbose=0;
+	float arg;
+	char cmd[256];
 
-char	device_ip[25];
-CLINK	*clink;
-int	i,channel,verbose=0;
-float	arg;
-char	cmd[256];
-BOOL	setup_clink=FALSE;
-
-	/* This is the default IP, and as this command previously used this as
-	 * default it is retained here in order not to break any old scripts */
-	strncpy(device_ip,"128.243.74.108",25);
-
+	if (argc==1) {
+		printhelp();
+		return 0;
+	}
 
 	for(i=1;i<argc;i++){
-		//printf("Argument %d of %d: %s\n",i,argc,argv[i]);
-		// this is an option so process as such
-		if(argv[i][0]=='-'){
-			if(argv[i][1]=='i'){
-				// assume next string is IP address, we have to check
-				// this first before we try and send anything
-				strncpy(device_ip,argv[++i],25);
-				}
-			/* Need to check if we just want help early on: 
-			 * prevents the case where we attempt to open the
-			 * default device (which probably isn't turned on or
-			 * accessable) */
-			if(argv[i][1]=='h'){
-				printhelp();
-				/* Still have to check if we've already opened a device
-				 * or not */
-				if (setup_clink==TRUE) {
-					tek_close(device_ip,clink);
-					}
-				exit(0);
-				}
-			// whether we got an IP address or not, now is the time to open
-			// the device, as sooner or later we're going to send a command
-			if (setup_clink==FALSE) {
-				clink = tek_open(device_ip);
-				if (!clink){
-					printf("Quitting...\n");
-					exit(2);
-					}
-				setup_clink=TRUE;
-				}
-			if(argv[i][1]=='v'){
-				verbose++;
-				}
-			if(argv[i][1]=='q'){
-				verbose--;
-				}
-			if(argv[i][1]=='d'){
-				// assume next string is a direct command
-				vxi11_send(clink, argv[++i]);
-				}
+		if(!strcmp(argv[i], "-h")){
+			printhelp();
+			return 0;
+		}else if(!strcmp(argv[i], "-v")){
+			verbose++;
+		}else if(!strcmp(argv[i], "-q")){
+			verbose--;
+		}else if(!strcmp(argv[i], "-ip")){
+			device_ip = strdup(argv[++i]);
+		}else if(!strcmp(argv[i], "-d")){
+			if(cmd_add(argv[++i])){
+				return 1;
 			}
 		// this isn't an option so it must be a command,
-		else{
-			// this catchall is in case no IP is specified (in which case default IP
-			// will be used) AND we have no options, e.g: "tek_arb E:1:ON"
-			if (setup_clink==FALSE) {
-				clink = tek_open(device_ip);
-				if (!clink){
-					printf("Quitting...\n");
-					exit(2);
-					}
-				setup_clink=TRUE;
-				}
+		}else{
 			if(verbose>0){
 				printf("Processing: %s\n",argv[i]);
 				}
@@ -135,45 +103,64 @@ BOOL	setup_clink=FALSE;
 				}
 			switch(argv[i][0]){
 				case 'E':
-					sprintf(cmd, "OUTP%d:STAT %s",channel,argv[i]+4);
+					snprintf(cmd, 256, "OUTP%d:STAT %s",channel,argv[i]+4);
 					if(verbose>0)printf("vxi11_send: %s\n",cmd);
-					vxi11_send(clink, cmd);
+					if(cmd_add(cmd)){
+						return 1;
+					}
 					break;
 				case 'O':
-					sprintf(cmd, "SOUR%d:VOLT:LEV:IMM:OFFS %fV",channel,arg);
+					snprintf(cmd, 256, "SOUR%d:VOLT:LEV:IMM:OFFS %fV",channel,arg);
 					if(verbose>0)printf("vxi11_send: %s\n",cmd);
-					vxi11_send(clink, cmd);
+					if(cmd_add(cmd)){
+						return 1;
+					}
 					break;
 				case 'A':
 				case 'V':
-					sprintf(cmd, "SOUR%d:VOLT:LEV:IMM:AMPL %fVPP",channel,arg);
+					snprintf(cmd, 256, "SOUR%d:VOLT:LEV:IMM:AMPL %fVPP",channel,arg);
 					if(verbose>0)printf("vxi11_send: %s\n",cmd);
-					vxi11_send(clink, cmd);
+					if(cmd_add(cmd)){
+						return 1;
+					}
 					break;
 				case 'F':
-					sprintf(cmd, "SOUR%d:FREQ:FIX %fHz",channel,arg);
+					snprintf(cmd, 256, "SOUR%d:FREQ:FIX %fHz",channel,arg);
 					if(verbose>0)printf("vxi11_send: %s\n",cmd);
-					vxi11_send(clink, cmd);
+					if(cmd_add(cmd)){
+						return 1;
+					}
 					break;
 				case 'P':
-					sprintf(cmd, "SOUR%d:PHAS:ADJ %fDEG",channel,arg);
+					snprintf(cmd, 256, "SOUR%d:PHAS:ADJ %fDEG",channel,arg);
 					if(verbose>0)printf("vxi11_send: %s\n",cmd);
-					vxi11_send(clink, cmd);
+					if(cmd_add(cmd)){
+						return 1;
+					}
 					break;
 				default:
 					printf("Unknown command in \"normal\" mode\n");
-				}
 			}
 		}
-
-	if (argc==1) {
-		printhelp();
-		}
-
-	if (setup_clink==TRUE) {
-		tek_close(device_ip,clink);
-		}
 	}
+
+	/* This is the default IP, and as this command previously used this as
+	 * default it is retained here in order not to break any old scripts */
+	if(!device_ip){
+		device_ip = strdup("128.243.74.108");
+	}
+
+	clink = tek_open(device_ip);
+	if (!clink){
+		printf("Error opening device...\n");
+		exit(2);
+	}
+
+	for(i=0; i<cmd_count; i++){
+		vxi11_send(clink, cmds[i]);
+	}
+	tek_close(device_ip, clink);
+}
 
 void printhelp(void){
 	printf("\nTektronix AFG 3252 control program\n");
@@ -192,5 +179,5 @@ void printhelp(void){
 	printf("V - set voltage eg V:1:2 (set PP voltage on channel 1 to 2V)\n");
 	printf("F - set frequency eg F:2:10000 (set frequency on channel 2 to 10kHz)\n");
 	printf("P - set phase eg P:1:180 (set phase on channel 1 to 180 degrees)\n\n");
-	}
+}
 
