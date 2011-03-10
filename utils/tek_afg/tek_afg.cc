@@ -49,6 +49,10 @@
 #define snprintf sprintf_s
 #endif
 
+#ifndef strcasecmp
+#define strcasecmp stricmp
+#endif
+
 char **cmds = NULL;
 int cmd_count = 0;
 
@@ -75,6 +79,7 @@ int	main(int argc, char *argv[]) {
 	CLINK *clink = NULL;
 	int i, channel, verbose=0;
 	float arg;
+	char *shape;
 	char cmd[256];
 
 	if (argc==1) {
@@ -102,7 +107,11 @@ int	main(int argc, char *argv[]) {
 				printf("Processing: %s\n",argv[i]);
 				}
 			channel=atoi(argv[i]+2);
-			arg=atof(argv[i]+4);
+			if(argv[i][0] == 'S'){
+				shape = argv[i]+4;
+			}else{
+				arg=atof(argv[i]+4);
+			}
 			if(verbose>0){
 				printf("Channel = %d argument = %f\n",channel,arg);
 				}
@@ -139,6 +148,27 @@ int	main(int argc, char *argv[]) {
 				case 'P':
 					snprintf(cmd, 256, "SOUR%d:PHAS:ADJ %fDEG",channel,arg);
 					if(verbose>0)printf("vxi11_send: %s\n",cmd);
+					if(cmd_add(cmd)){
+						return 1;
+					}
+					break;
+				case 'S':
+					if(!strcasecmp(shape, "DC")){
+						snprintf(cmd, 256, "SOUR%d:FUNC:SHAP DC", channel);
+						if(verbose>0)printf("vxi11_send: %s\n",cmd);
+					}else if(!strcasecmp(shape, "SINE")){
+						snprintf(cmd, 256, "SOUR%d:FUNC:SHAP SIN", channel);
+						if(verbose>0)printf("vxi11_send: %s\n",cmd);
+					}else if(!strcasecmp(shape, "SQUARE")){
+						snprintf(cmd, 256, "SOUR%d:FUNC:SHAP SQU", channel);
+						if(verbose>0)printf("vxi11_send: %s\n",cmd);
+					}else if(!strcasecmp(shape, "TRIANGLE")){
+						snprintf(cmd, 256, "SOUR%d:FUNC:SHAP TRI", channel);
+						if(verbose>0)printf("vxi11_send: %s\n",cmd);
+					}else{
+						printf("Unknown shape '%s'.\n", shape);
+						return 1;
+					}
 					if(cmd_add(cmd)){
 						return 1;
 					}
@@ -184,6 +214,7 @@ void printhelp(void){
 	printf("A - synonym for V\n");
 	printf("V - set voltage eg V:1:2 (set PP voltage on channel 1 to 2V)\n");
 	printf("F - set frequency eg F:2:10000 (set frequency on channel 2 to 10kHz)\n");
-	printf("P - set phase eg P:1:180 (set phase on channel 1 to 180 degrees)\n\n");
+	printf("P - set phase eg P:1:180 (set phase on channel 1 to 180 degrees)\n");
+	printf("S - set shape eg DC SINE SQUARE TRIANGLE.\n\n");
 }
 
