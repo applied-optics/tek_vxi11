@@ -8,6 +8,11 @@ set (VERSION x.xx)
 # Shared library for tek_user
 # ==================================================
 
+if (WIN32)
+	include_directories(C:\vxi11)
+	link_directories(C:\vxi11)
+endif (WIN32)
+
 add_library(tek_user SHARED
 	library/tek_user.cc library/tek_user.h
 )
@@ -23,7 +28,7 @@ set_target_properties(tek_user PROPERTIES
 # ==================================================
 
 add_executable(tek_afg utils/tek_afg/tek_afg.cc)
-target_link_libraries(tek_afg tek_user)
+target_link_libraries(tek_afg vxi11)
 
 add_executable(tek_afg_upload_arb utils/tek_afg_upload_arb/tek_afg_upload_arb.cc)
 target_link_libraries(tek_afg_upload_arb tek_user)

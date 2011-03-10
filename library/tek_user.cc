@@ -82,9 +82,24 @@
  * The author's email address is steve.sharples@nottingham.ac.uk
  */
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef WIN32
+#  include <windows.h>
+#else
+#  include <unistd.h>
+#endif
+
+#ifndef snprintf
+#  define snprintf sprintf_s
+#endif
+
+#ifndef round
+#  define round(a) floor(a+0.5f)
+#endif
+
 #include "tek_user.h"
 
 /*****************************************************************************
@@ -210,7 +225,7 @@ char	cmd[256];
 	 * otherwise leave alone */
 	tek_scope_channel_str(source);
 	/* set the source channel */
-	sprintf(cmd,"DATA:SOURCE %s",source);
+	snprintf(cmd, 256, "DATA:SOURCE %s", source);
 	vxi11_send(clink, cmd);
 
 	return tek_scope_write_wfi_file(clink, wfiname, captured_by, no_of_traces, timeout);
@@ -282,7 +297,6 @@ long	tek_scope_set_for_capture(CLINK *clink, int clear_sweeps, long record_lengt
 void	tek_scope_force_xincr_update(CLINK *clink, unsigned long timeout) {
 long	value;
 int	acq_state;
-char	buf[256];
 
 	/* We need to perform an acq:state 1 doing first, otherwise it could
 	 * just get the wrong value of hor:record. We also need to set the
@@ -446,6 +460,8 @@ char cmd[256];
 		vxi11_send(clink, cmd);
 		return vxi11_send(clink, "ACQUIRE:MODE ENVELOPE");
 		}
+
+	return 1;
 	}
 
 /* Gets the number of averages. Actually it's a bit cleverer than that, and
@@ -487,6 +503,8 @@ long	result;
 			return (int) -result;
 			}
 		}
+
+	return 1;
 	}
 
 /* Use segmented mode (called "FastFrame" on Tek scopes) to do (relatively)
@@ -509,7 +527,11 @@ long	opc_value;
 	if (no_averages >= max_segments) no_averages = max_segments - 1;
 	sprintf(cmd, "HOR:FASTFRAME:SUMFRAME AVERAGE;:HOR:FASTFRAME:COUNT %d;:DATA:FRAMESTART %d;:DATA:FRAMESTOP %d", (no_averages+1), (no_averages+1), (no_averages+1));
 	vxi11_send(clink,cmd);
+#ifdef WIN32
+	Sleep(400);
+#else
 	usleep(400000);
+#endif
 	return no_averages;
 	}
 
@@ -533,15 +555,27 @@ long	opc_value;
 
 	vxi11_send(clink,"HOR:FASTFRAME:STATE 0");
 	opc_value = vxi11_obtain_long_value(clink, "*OPC?");
+#ifdef WIN32
+	Sleep(1000);
+#else
 	usleep(1000000);
+#endif
 	vxi11_send(clink,"ACQUIRE:STOPAFTER SEQUENCE;:ACQUIRE:STATE 1");
 	opc_value = vxi11_obtain_long_value(clink, "*OPC?");
+#ifdef WIN32
+	Sleep(1000);
+#else
 	usleep(1000000);
+#endif
 	max_segments = (int) vxi11_obtain_long_value(clink, "HOR:FASTFRAME:STATE 1;:HOR:FASTFRAME:MAXFRAMES?");
 	if (no_segments >= max_segments) no_segments = max_segments;
 	sprintf(cmd, "HOR:FASTFRAME:SUMFRAME NONE;:HOR:FASTFRAME:COUNT %d;:DATA:FRAMESTART 1;:DATA:FRAMESTOP %d", no_segments, no_segments);
 	vxi11_send(clink,cmd);
+#ifdef WIN32
+	Sleep(500);
+#else
 	usleep(500000);
+#endif
 	return no_segments;
 	}
 
@@ -620,7 +654,6 @@ char	buf[256];
  * tek_afg_swap_bytes() before calling this (a little inefficient I know). */
 int	tek_afg_send_arb(CLINK *clink, char *buf, unsigned long buf_len, int chan) {
 int	ret;
-long	bytes_returned;
 char	cmd[256];
 
 	tek_afg_swap_bytes(buf, buf_len); /* Swap bytes, little endian -> big endian */
@@ -672,7 +705,7 @@ void	tek_scope_channel_str(char chan, char *source) {
 
 void	tek_afg_swap_bytes(char *buf, unsigned long buf_len) {
 char	*tmp;
-int	i;
+unsigned long	i;
 	tmp=new char[buf_len];
 	for(i = 0; i < buf_len; i = i+2) {
 		tmp[i+1] = buf[i];

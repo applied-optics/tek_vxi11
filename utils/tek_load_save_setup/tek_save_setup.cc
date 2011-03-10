@@ -52,7 +52,6 @@ int	main(int argc, char *argv[]) {
 
 static char *device_ip;
 static char *filename;
-char cmd[256];
 char buf[BUF_LEN];
 
 FILE	*fo;

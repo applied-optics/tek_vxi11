@@ -73,6 +73,10 @@
 #include <string.h>
 #include "../../library/tek_user.h"
 
+#ifndef snprintf
+#define snprintf sprintf_s
+#endif
+
 #ifndef	BOOL
 #define	BOOL	int
 #endif
@@ -114,7 +118,6 @@ char		ch;
 int		index=1;
 double		s_rate=0;
 long		npoints=0;
-double		actual_s_rate;
 long		actual_npoints;
 
 CLINK		*clink; /* client link (actually a structure contining CLIENT and VXI11_LINK pointers) */
@@ -145,23 +148,23 @@ CLINK		*clink; /* client link (actually a structure contining CLIENT and VXI11_L
 		if(sc(argv[index],"-no_points")||sc(argv[index],"-n")||sc(argv[index],"-points")){
 			sscanf(argv[++index],"%ld",&npoints);
 			}
-			
+
 		if(sc(argv[index],"-averages")||sc(argv[index],"-a")||sc(argv[index],"-aver")){
 			sscanf(argv[++index],"%d",&no_averages);
 			if (no_averages == 0 || no_averages == 1) no_averages = 0; /* tek_scope_set_averages() interprets this as "sample mode"*/
 			got_no_averages=TRUE;
 			}
-			
+
 		if(sc(argv[index],"-seg_averages")||sc(argv[index],"-sa")||sc(argv[index],"-seg_aver")){
 			sscanf(argv[++index],"%d",&no_averages);
 			got_segmented_averages=TRUE;
 			}
-			
+
 		if(sc(argv[index],"-segmented")||sc(argv[index],"-seg")||sc(argv[index],"-fast")){
 			sscanf(argv[++index],"%d",&no_segments);
 			got_segmented=TRUE;
 			}
-			
+
 		if(sc(argv[index],"-sample")||sc(argv[index],"-s")||sc(argv[index],"-sam")){
 			no_averages=0; /* tek_scope_set_averages() interprets this as "sample mode" */
 			got_no_averages=TRUE;
