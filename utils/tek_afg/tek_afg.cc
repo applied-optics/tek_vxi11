@@ -45,11 +45,8 @@
 #include <string.h>
 #include "vxi11_user.h"
 
-#ifndef snprintf
+#ifdef WIN32
 #define snprintf sprintf_s
-#endif
-
-#ifndef strcasecmp
 #define strcasecmp stricmp
 #endif
 

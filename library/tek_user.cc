@@ -92,7 +92,7 @@
 #  include <unistd.h>
 #endif
 
-#ifndef snprintf
+#ifdef WIN32
 #  define snprintf sprintf_s
 #endif
 

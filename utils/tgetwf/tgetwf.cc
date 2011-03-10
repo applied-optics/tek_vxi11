@@ -73,7 +73,7 @@
 #include <string.h>
 #include "../../library/tek_user.h"
 
-#ifndef snprintf
+#ifdef WIN32
 #define snprintf sprintf_s
 #endif
 
