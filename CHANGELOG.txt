@@ -1,4 +1,11 @@
 ------------------------------------------------------------------------------
+tek_x.xx - xx/xx/xxxx
+
+Updated to use vxi11 shared library.
+tek_user is now compiled as a shared library.
+Added alternate build script for CMake.
+
+------------------------------------------------------------------------------
 tek_1.04 - 17/08/2009
 
 Bug fix: (tgetwf.c): default behaviour is now "clear_sweeps=TRUE" i.e. scope
