@@ -4,13 +4,10 @@ include ../../config.mk
 
 all:	tgetwf
 
-tgetwf: tgetwf.o tek_user.o
-	$(CXX) -o $@ $^ -lvxi11 $(LDFLAGS)
+tgetwf: tgetwf.o
+	$(CXX) -o $@ $^ ../../library/libtek_user.so.0 $(LDFLAGS)
 
 tgetwf.o: tgetwf.c
-	$(CXX) $(CFLAGS) -c $^ -o $@
-
-tek_user.o:	../../library/tek_user.c
 	$(CXX) $(CFLAGS) -c $^ -o $@
 
 clean:

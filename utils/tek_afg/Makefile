@@ -4,13 +4,10 @@ include ../../config.mk
 
 all:	tek_afg
 
-tek_afg: tek_afg.o tek_user.o
-	$(CXX) -o $@ $^ -lvxi11 $(LDFLAGS)
+tek_afg: tek_afg.o
+	$(CXX) -o $@ $^ ../../library/libtek_user.so.0 $(LDFLAGS)
 
 tek_afg.o: tek_afg.c
-	$(CXX) $(CFLAGS) -c $^ -o $@
-
-tek_user.o:	../../library/tek_user.c
 	$(CXX) $(CFLAGS) -c $^ -o $@
 
 clean:
