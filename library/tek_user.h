@@ -88,6 +88,7 @@
 #include "vxi11_user.h"
 
 tk_EXPORT CLINK *tek_open(char *ip);
+tk_EXPORT int tek_open(char *ip, CLINK *clink);
 tk_EXPORT int	tek_close(char *ip, CLINK *clink);
 tk_EXPORT int	tek_scope_init(CLINK *clink);
 tk_EXPORT int	tek_scope_get_setup(CLINK *clink, char* buf, unsigned long buf_len);

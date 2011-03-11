@@ -112,6 +112,10 @@ CLINK *tek_open(char *ip) {
 	return vxi11_open_device(ip);
 	}
 
+int tek_open(char *ip, CLINK *clink) {
+	return vxi11_open_device(ip, clink);
+	}
+
 /* Again, just a wrapper */
 int	tek_close(char *ip, CLINK *clink) {
 	return vxi11_close_device(ip, clink);
