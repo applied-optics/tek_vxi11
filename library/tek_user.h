@@ -91,9 +91,9 @@ tk_EXPORT int tek_open(VXI11_CLINK ** clink, const char *ip);
 tk_EXPORT int tek_close(VXI11_CLINK * clink, const char *ip);
 tk_EXPORT int tek_scope_init(VXI11_CLINK * clink);
 tk_EXPORT int tek_scope_get_setup(VXI11_CLINK * clink, char *buf,
-				  unsigned long buf_len);
+				  size_t len);
 tk_EXPORT int tek_scope_send_setup(VXI11_CLINK * clink, char *buf,
-				   unsigned long buf_len);
+				   size_t len);
 tk_EXPORT long tek_scope_write_wfi_file(VXI11_CLINK * clink, char *wfiname,
 					char *captured_by, int no_of_traces,
 					unsigned long timeout);
@@ -116,10 +116,10 @@ tk_EXPORT long tek_scope_calculate_no_of_bytes(VXI11_CLINK * clink,
 tk_EXPORT long tek_scope_calculate_no_of_bytes(VXI11_CLINK * clink, int is_TDS3000,
 					       unsigned long timeout);
 tk_EXPORT long tek_scope_get_data(VXI11_CLINK * clink, char chan, int clear_sweeps,
-				  char *buf, unsigned long buf_len,
+				  char *buf, size_t len,
 				  unsigned long timeout);
 tk_EXPORT long tek_scope_get_data(VXI11_CLINK * clink, char *source, int clear_sweeps,
-				  char *buf, unsigned long buf_len,
+				  char *buf, size_t len,
 				  unsigned long timeout);
 tk_EXPORT void tek_scope_set_for_auto(VXI11_CLINK * clink);
 tk_EXPORT int tek_scope_set_averages(VXI11_CLINK * clink, int no_averages);
@@ -130,10 +130,10 @@ tk_EXPORT long tek_scope_set_record_length(VXI11_CLINK * clink, long record_leng
 tk_EXPORT long tek_scope_get_no_points(VXI11_CLINK * clink);
 tk_EXPORT double tek_scope_get_sample_rate(VXI11_CLINK * clink);
 tk_EXPORT int tek_scope_is_TDS3000(VXI11_CLINK * clink);
-tk_EXPORT int tek_afg_send_arb(VXI11_CLINK * clink, char *buf, unsigned long buf_len,
+tk_EXPORT int tek_afg_send_arb(VXI11_CLINK * clink, char *buf, size_t len,
 			       int chan);
-tk_EXPORT int tek_afg_send_arb(VXI11_CLINK * clink, char *buf, unsigned long buf_len);
-tk_EXPORT void tek_afg_swap_bytes(char *buf, unsigned long buf_len);
+tk_EXPORT int tek_afg_send_arb(VXI11_CLINK * clink, char *buf, size_t len);
+tk_EXPORT void tek_afg_swap_bytes(char *buf, size_t len);
 tk_EXPORT void tek_scope_channel_str(char *source);
 tk_EXPORT void tek_scope_channel_str(char chan, char *source);
 

@@ -149,7 +149,7 @@ int tek_scope_init(VXI11_CLINK * clink)
  * is set ON or OFF; the scope model; presumably firmware version; and of
  * course the actual scope settings at the time. A buffer length of greater 
  * than 4000 bytes at least is needed in most cases. */
-int tek_scope_get_setup(VXI11_CLINK * clink, char *buf, unsigned long buf_len)
+int tek_scope_get_setup(VXI11_CLINK * clink, char *buf, size_t len)
 {
 	int ret;
 	long bytes_returned;
@@ -159,7 +159,7 @@ int tek_scope_get_setup(VXI11_CLINK * clink, char *buf, unsigned long buf_len)
 		printf("error, could not ask for Tek scope system setup...\n");
 		return ret;
 	}
-	bytes_returned = vxi11_receive(clink, buf, buf_len);
+	bytes_returned = vxi11_receive(clink, buf, len);
 
 	return (int)bytes_returned;
 }
@@ -167,9 +167,9 @@ int tek_scope_get_setup(VXI11_CLINK * clink, char *buf, unsigned long buf_len)
 /* This is really just a wrapper function for vxi11_send, as the Tektronix way
  * of saving a setup is to report back a whole string of commands that completely
  * describe the way the scope is set up. */
-int tek_scope_send_setup(VXI11_CLINK * clink, char *buf, unsigned long buf_len)
+int tek_scope_send_setup(VXI11_CLINK * clink, char *buf, size_t len)
 {
-	return vxi11_send(clink, buf, buf_len);
+	return vxi11_send(clink, buf, len);
 }
 
 /* This function, tek_scope_write_wfi_file(), saves useful (to us!)
@@ -403,20 +403,20 @@ long tek_scope_calculate_no_of_bytes(VXI11_CLINK * clink, unsigned long timeout)
 
 /* Grabs data from the scope. Wrapper fn, converts a (char) chan to a (char*) source. */
 long tek_scope_get_data(VXI11_CLINK * clink, char chan, int clear_sweeps,
-			char *buf, unsigned long buf_len, unsigned long timeout)
+			char *buf, size_t len, unsigned long timeout)
 {
 	char source[20];
 
 	memset(source, 0, 20);
 	tek_scope_channel_str(chan, source);
 
-	return tek_scope_get_data(clink, source, clear_sweeps, buf, buf_len,
+	return tek_scope_get_data(clink, source, clear_sweeps, buf, len,
 				  timeout);
 }
 
 /* Grabs data from the scope */
 long tek_scope_get_data(VXI11_CLINK * clink, char *source, int clear_sweeps,
-			char *buf, unsigned long buf_len, unsigned long timeout)
+			char *buf, size_t len, unsigned long timeout)
 {
 	char cmd[256];
 	int ret;
@@ -455,7 +455,7 @@ long tek_scope_get_data(VXI11_CLINK * clink, char *source, int clear_sweeps,
 	}
 	/* ask for the data, and receive it */
 	vxi11_send_str(clink, "CURVE?");
-	bytes_returned = vxi11_receive_data_block(clink, buf, buf_len, timeout);
+	bytes_returned = vxi11_receive_data_block(clink, buf, len, timeout);
 
 	return bytes_returned;
 }
@@ -728,16 +728,16 @@ int tek_scope_is_TDS3000(VXI11_CLINK * clink)
  * little-endian, so we swap the bytes before sending the data. If the data
  * is already in big-endian format, then just call the function
  * tek_afg_swap_bytes() before calling this (a little inefficient I know). */
-int tek_afg_send_arb(VXI11_CLINK * clink, char *buf, unsigned long buf_len,
+int tek_afg_send_arb(VXI11_CLINK * clink, char *buf, size_t len,
 		     int chan)
 {
 	int ret;
 	char cmd[256];
 	int slen;
 
-	tek_afg_swap_bytes(buf, buf_len);	/* Swap bytes, little endian -> big endian */
+	tek_afg_swap_bytes(buf, len);	/* Swap bytes, little endian -> big endian */
 	ret =
-	    vxi11_send_data_block(clink, ":TRACE:DATA EMEMORY,", buf, buf_len);
+	    vxi11_send_data_block(clink, ":TRACE:DATA EMEMORY,", buf, len);
 	if (ret < 0) {
 		printf("tek_afg_send_arb: error sending waveform data...\n");
 		return ret;
@@ -751,9 +751,9 @@ int tek_afg_send_arb(VXI11_CLINK * clink, char *buf, unsigned long buf_len,
 
 /* Wrapper fn for above, just uploads to edit memory, doesn't transfer to user
  * memory */
-int tek_afg_send_arb(VXI11_CLINK * clink, char *buf, unsigned long buf_len)
+int tek_afg_send_arb(VXI11_CLINK * clink, char *buf, size_t len)
 {
-	return tek_afg_send_arb(clink, buf, buf_len, -1);
+	return tek_afg_send_arb(clink, buf, len, -1);
 }
 
 /*****************************************************************************
@@ -789,14 +789,14 @@ void tek_scope_channel_str(char chan, char *source)
 	}
 }
 
-void tek_afg_swap_bytes(char *buf, unsigned long buf_len)
+void tek_afg_swap_bytes(char *buf, size_t len)
 {
 	char *tmp;
 	unsigned long i;
-	tmp = new char[buf_len];
-	for (i = 0; i < buf_len; i = i + 2) {
+	tmp = new char[len];
+	for (i = 0; i < len; i = i + 2) {
 		tmp[i + 1] = buf[i];
 		tmp[i] = buf[i + 1];
 	}
-	memcpy(buf, tmp, (unsigned long)buf_len);
+	memcpy(buf, tmp, len);
 }
