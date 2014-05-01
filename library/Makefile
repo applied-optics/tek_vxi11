@@ -5,7 +5,7 @@ include ../config.mk
 all : libtek_user.so.0
 
 libtek_user.so.0 : tek_user.o
-	$(CXX) -shared -Wl,-soname,libtek_user.so.0 $^ -o $@ -lvxi11
+	$(CXX) ${LDFLAGS} -shared -Wl,-soname,libtek_user.so.0 $^ -o $@ -lvxi11
 
 tek_user.o: tek_user.cc tek_user.h
 	$(CXX) -fPIC $(CFLAGS) -c $< -o $@
