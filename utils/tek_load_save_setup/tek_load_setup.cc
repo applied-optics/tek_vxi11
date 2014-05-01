@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 
 	FILE *fi;
 	long bytes_returned;
-	CLINK *clink;
+	VXI11_CLINK *clink;
 
 	if (argc != 3) {
 		printf("usage: %s www.xxx.yyy.zzz filename.tss\n", argv[0]);
@@ -73,15 +73,14 @@ int main(int argc, char *argv[])
 	if (fi > 0) {
 		bytes_returned = fread((char *)buf, sizeof(char), BUF_LEN, fi);
 		fclose(fi);
-		clink = tek_open(device_ip);
-		if (!clink) {
+		if(tek_open(&clink, device_ip)){
 			printf("Quitting...\n");
 			exit(2);
 		}
 
 		tek_scope_send_setup(clink, buf, strlen(buf));
 
-		tek_close(device_ip, clink);
+		tek_close(clink, device_ip);
 	} else {
 		printf("error: could not open file for reading, quitting...\n");
 		exit(3);

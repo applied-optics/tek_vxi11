@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
 
 	FILE *fo;
 	long bytes_returned;
-	CLINK *clink;
+	VXI11_CLINK *clink;
 
 	if (argc != 3) {
 		printf("usage: %s www.xxx.yyy.zzz filename.tss\n", argv[0]);
@@ -70,8 +70,7 @@ int main(int argc, char *argv[])
 
 	fo = fopen(filename, "w");
 	if (fo > 0) {
-		clink = tek_open(device_ip);
-		if (!clink) {
+		if(tek_open(&clink, device_ip)){
 			printf("Quitting...\n");
 			exit(2);
 		}
@@ -84,7 +83,7 @@ int main(int argc, char *argv[])
 
 		fprintf(fo, "%s\n", buf);
 		fclose(fo);
-		tek_close(device_ip, clink);
+		tek_close(clink, device_ip);
 	} else {
 		printf("error: could not open file for writing, quitting...\n");
 		exit(3);

@@ -74,7 +74,7 @@ int cmd_add(const char *cmd)
 int main(int argc, char *argv[])
 {
 	char *device_ip = NULL;
-	CLINK *clink = NULL;
+	VXI11_CLINK *clink = NULL;
 	int i, channel, verbose = 0;
 	float arg;
 	char *shape;
@@ -208,16 +208,15 @@ int main(int argc, char *argv[])
 		device_ip = strdup("128.243.74.108");
 	}
 
-	clink = vxi11_open_device(device_ip);
-	if (!clink) {
+	if(vxi11_open_device(&clink, device_ip, NULL)){
 		printf("Error opening device...\n");
 		exit(2);
 	}
 
 	for (i = 0; i < cmd_count; i++) {
-		vxi11_send(clink, cmds[i]);
+		vxi11_send_str(clink, cmds[i]);
 	}
-	vxi11_close_device(device_ip, clink);
+	vxi11_close_device(clink, device_ip);
 }
 
 void printhelp(void)

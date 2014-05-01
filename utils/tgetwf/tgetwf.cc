@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
 	long npoints = 0;
 	long actual_npoints;
 
-	CLINK *clink;		/* client link (actually a structure contining CLIENT and VXI11_LINK pointers) */
+	VXI11_CLINK *clink;		/* client link (actually a structure contining CLIENT and VXI11_LINK pointers) */
 
 	progname = argv[0];
 
@@ -281,10 +281,9 @@ int main(int argc, char *argv[])
 	if (f_wf > 0) {
 		/* This utility illustrates the general idea behind how data is acquired.
 		 * First we open the device, referenced by an IP address, and obtain
-		 * a client id, and a link id, all contained in a "CLINK" structure.  Each
+		 * a client id, and a link id, all contained in a "VXI11_CLINK" structure.  Each
 		 * client can have more than one link. For simplicity we bundle them together. */
-		clink = tek_open(device_ip);
-		if (!clink) {	// could also use "vxi11_open_device()"
+		if(tek_open(&clink, device_ip)){
 			printf("Quitting...\n");
 			exit(2);
 		}
@@ -406,7 +405,7 @@ int main(int argc, char *argv[])
 					 no_traces_acquired, timeout);
 
 		/* Finally we sever the link to the client. */
-		tek_close(device_ip, clink);	// could also use "vxi11_close_device()"
+		tek_close(clink, device_ip);	// could also use "vxi11_close_device()"
 
 		printf("%ld points acquired from source '%s'\n",
 		       (long)(buf_size / 2), channel);

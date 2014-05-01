@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
 	char cmd[256];
 	FILE *fi;
 	long bytes_returned;
-	CLINK *clink;
+	VXI11_CLINK *clink;
 	int ret;
 	int index = 1;
 	int chan = 0;
@@ -118,9 +118,8 @@ int main(int argc, char *argv[])
 
 	if (got_file == FALSE || got_ip == FALSE) {
 		printf
-		    ("%s: uploads an arbitrary waveform to a Tek AFG3000 series\n");
-		printf("arbitrary/function generator, by Steve (August 2006)\n",
-		       progname);
+		    ("%s: uploads an arbitrary waveform to a Tek AFG3000 series\n", progname);
+		printf("arbitrary/function generator, by Steve (August 2006)\n");
 		printf("Run using %s [arguments]\n\n", progname);
 		printf("REQUIRED ARGUMENTS:\n");
 		printf
@@ -157,8 +156,7 @@ int main(int argc, char *argv[])
 		bytes_returned = fread(buf, sizeof(char), BUF_LEN, fi);
 		fclose(fi);
 
-		clink = tek_open(device_ip);
-		if (!clink) {
+		if(tek_open(&clink, device_ip)){
 			printf("Quitting...\n");
 			exit(2);
 		}
@@ -174,7 +172,7 @@ int main(int argc, char *argv[])
 			printf("Uh oh, I was returned %d, quitting.\n", ret);
 			exit(2);
 		}
-		tek_close(device_ip, clink);
+		tek_close(clink, device_ip);
 	} else {
 		printf("error: could not open file for reading, quitting...\n");
 		exit(3);
