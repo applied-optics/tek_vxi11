@@ -75,47 +75,67 @@
 #define _TEK_USER_H_
 
 #ifdef WIN32
-#  ifdef tek_user_EXPORTS
-#    define tk_EXPORT __declspec(dllexport)
-#  else
-#    define tk_EXPORT __declspec(dllimport)
-#  endif
+#ifdef tek_user_EXPORTS
+#define tk_EXPORT __declspec(dllexport)
 #else
-#  define tk_EXPORT
-#  define __stdcall
+#define tk_EXPORT __declspec(dllimport)
+#endif
+#else
+#define tk_EXPORT
+#define __stdcall
 #endif
 
 #include "vxi11_user.h"
 
 tk_EXPORT CLINK *tek_open(char *ip);
-tk_EXPORT int tek_open(char *ip, CLINK *clink);
-tk_EXPORT int	tek_close(char *ip, CLINK *clink);
-tk_EXPORT int	tek_scope_init(CLINK *clink);
-tk_EXPORT int	tek_scope_get_setup(CLINK *clink, char* buf, unsigned long buf_len);
-tk_EXPORT int	tek_scope_send_setup(CLINK *clink, char* buf, unsigned long buf_len);
-tk_EXPORT long	tek_scope_write_wfi_file(CLINK *clink, char *wfiname, char *captured_by, int no_of_traces, unsigned long timeout);
-tk_EXPORT long	tek_scope_write_wfi_file(CLINK *clink, char *wfiname, char *source, char *captured_by, int no_of_traces, unsigned long timeout);
-tk_EXPORT long	tek_scope_write_wfi_file(CLINK *clink, char *wfiname, char chan, char *captured_by, int no_of_traces, unsigned long timeout);
-tk_EXPORT long	tek_scope_set_for_capture(CLINK *clink, int clear_sweeps, unsigned long timeout);
-tk_EXPORT long	tek_scope_set_for_capture(CLINK *clink, int clear_sweeps, long record_length, unsigned long timeout);
-tk_EXPORT void	tek_scope_force_xincr_update(CLINK *clink, unsigned long timeout);
-tk_EXPORT long	tek_scope_calculate_no_of_bytes(CLINK *clink, unsigned long timeout);
-tk_EXPORT long	tek_scope_calculate_no_of_bytes(CLINK *clink, int is_TDS3000, unsigned long timeout);
-tk_EXPORT long	tek_scope_get_data(CLINK *clink, char chan, int clear_sweeps, char *buf, unsigned long buf_len, unsigned long timeout);
-tk_EXPORT long	tek_scope_get_data(CLINK *clink, char *source, int clear_sweeps, char *buf, unsigned long buf_len, unsigned long timeout);
-tk_EXPORT void	tek_scope_set_for_auto(CLINK *clink);
-tk_EXPORT int	tek_scope_set_averages(CLINK *clink, int no_averages);
-tk_EXPORT int	tek_scope_get_averages(CLINK *clink);
-tk_EXPORT int	tek_scope_set_segmented_averages(CLINK *clink, int no_averages);
-tk_EXPORT int	tek_scope_set_segmented(CLINK *clink, int no_segments);
-tk_EXPORT long	tek_scope_set_record_length(CLINK *clink, long record_length);
-tk_EXPORT long	tek_scope_get_no_points(CLINK *clink);
-tk_EXPORT double	tek_scope_get_sample_rate(CLINK *clink);
-tk_EXPORT int	tek_scope_is_TDS3000(CLINK *clink);
-tk_EXPORT int	tek_afg_send_arb(CLINK *clink, char *buf, unsigned long buf_len, int chan);
-tk_EXPORT int	tek_afg_send_arb(CLINK *clink, char *buf, unsigned long buf_len);
-tk_EXPORT void	tek_afg_swap_bytes(char *buf, unsigned long buf_len);
-tk_EXPORT void	tek_scope_channel_str(char *source);
-tk_EXPORT void	tek_scope_channel_str(char chan, char *source);
+tk_EXPORT int tek_open(char *ip, CLINK * clink);
+tk_EXPORT int tek_close(char *ip, CLINK * clink);
+tk_EXPORT int tek_scope_init(CLINK * clink);
+tk_EXPORT int tek_scope_get_setup(CLINK * clink, char *buf,
+				  unsigned long buf_len);
+tk_EXPORT int tek_scope_send_setup(CLINK * clink, char *buf,
+				   unsigned long buf_len);
+tk_EXPORT long tek_scope_write_wfi_file(CLINK * clink, char *wfiname,
+					char *captured_by, int no_of_traces,
+					unsigned long timeout);
+tk_EXPORT long tek_scope_write_wfi_file(CLINK * clink, char *wfiname,
+					char *source, char *captured_by,
+					int no_of_traces,
+					unsigned long timeout);
+tk_EXPORT long tek_scope_write_wfi_file(CLINK * clink, char *wfiname, char chan,
+					char *captured_by, int no_of_traces,
+					unsigned long timeout);
+tk_EXPORT long tek_scope_set_for_capture(CLINK * clink, int clear_sweeps,
+					 unsigned long timeout);
+tk_EXPORT long tek_scope_set_for_capture(CLINK * clink, int clear_sweeps,
+					 long record_length,
+					 unsigned long timeout);
+tk_EXPORT void tek_scope_force_xincr_update(CLINK * clink,
+					    unsigned long timeout);
+tk_EXPORT long tek_scope_calculate_no_of_bytes(CLINK * clink,
+					       unsigned long timeout);
+tk_EXPORT long tek_scope_calculate_no_of_bytes(CLINK * clink, int is_TDS3000,
+					       unsigned long timeout);
+tk_EXPORT long tek_scope_get_data(CLINK * clink, char chan, int clear_sweeps,
+				  char *buf, unsigned long buf_len,
+				  unsigned long timeout);
+tk_EXPORT long tek_scope_get_data(CLINK * clink, char *source, int clear_sweeps,
+				  char *buf, unsigned long buf_len,
+				  unsigned long timeout);
+tk_EXPORT void tek_scope_set_for_auto(CLINK * clink);
+tk_EXPORT int tek_scope_set_averages(CLINK * clink, int no_averages);
+tk_EXPORT int tek_scope_get_averages(CLINK * clink);
+tk_EXPORT int tek_scope_set_segmented_averages(CLINK * clink, int no_averages);
+tk_EXPORT int tek_scope_set_segmented(CLINK * clink, int no_segments);
+tk_EXPORT long tek_scope_set_record_length(CLINK * clink, long record_length);
+tk_EXPORT long tek_scope_get_no_points(CLINK * clink);
+tk_EXPORT double tek_scope_get_sample_rate(CLINK * clink);
+tk_EXPORT int tek_scope_is_TDS3000(CLINK * clink);
+tk_EXPORT int tek_afg_send_arb(CLINK * clink, char *buf, unsigned long buf_len,
+			       int chan);
+tk_EXPORT int tek_afg_send_arb(CLINK * clink, char *buf, unsigned long buf_len);
+tk_EXPORT void tek_afg_swap_bytes(char *buf, unsigned long buf_len);
+tk_EXPORT void tek_scope_channel_str(char *source);
+tk_EXPORT void tek_scope_channel_str(char chan, char *source);
 
 #endif

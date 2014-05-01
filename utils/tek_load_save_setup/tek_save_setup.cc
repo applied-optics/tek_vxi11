@@ -48,44 +48,45 @@
 #include "../../library/tek_user.h"
 #define BUF_LEN 30000
 
-int	main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
 
-static char *device_ip;
-static char *filename;
-char buf[BUF_LEN];
+	static char *device_ip;
+	static char *filename;
+	char buf[BUF_LEN];
 
-FILE	*fo;
-long	bytes_returned;
-CLINK	*clink;
+	FILE *fo;
+	long bytes_returned;
+	CLINK *clink;
 
 	if (argc != 3) {
-		printf("usage: %s www.xxx.yyy.zzz filename.tss\n",argv[0]);
-		printf("Saves the current Tektronix scope setup as a .tss (Tek Scope Setup) file\n");
+		printf("usage: %s www.xxx.yyy.zzz filename.tss\n", argv[0]);
+		printf
+		    ("Saves the current Tektronix scope setup as a .tss (Tek Scope Setup) file\n");
 		exit(1);
-		}
+	}
 	device_ip = argv[1];
 	filename = argv[2];
 
-	fo=fopen(filename,"w");
+	fo = fopen(filename, "w");
 	if (fo > 0) {
 		clink = tek_open(device_ip);
-		if (!clink){
+		if (!clink) {
 			printf("Quitting...\n");
 			exit(2);
-			}
+		}
 
-		bytes_returned=tek_scope_get_setup(clink, buf, BUF_LEN);
-		if (bytes_returned <=0) {
+		bytes_returned = tek_scope_get_setup(clink, buf, BUF_LEN);
+		if (bytes_returned <= 0) {
 			printf("Problem reading the setup, quitting...\n");
 			exit(2);
-			}
+		}
 
 		fprintf(fo, "%s\n", buf);
 		fclose(fo);
-		tek_close(device_ip,clink);
-		}
-	else {
+		tek_close(device_ip, clink);
+	} else {
 		printf("error: could not open file for writing, quitting...\n");
 		exit(3);
-		}
 	}
+}

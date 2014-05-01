@@ -58,160 +58,192 @@ void printhelp(void);
 int cmd_add(const char *cmd)
 {
 	cmd_count++;
-	cmds = (char **)realloc(cmds, cmd_count*sizeof(char *));
-	if(!cmds){
+	cmds = (char **)realloc(cmds, cmd_count * sizeof(char *));
+	if (!cmds) {
 		printf("Out of memory\n");
 		return 1;
 	}
-	cmds[cmd_count-1] = strdup(cmd);
-	if(!cmds[cmd_count-1]){
+	cmds[cmd_count - 1] = strdup(cmd);
+	if (!cmds[cmd_count - 1]) {
 		printf("Out of memory\n");
 		return 1;
 	}
 	return 0;
 }
 
-int	main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
 	char *device_ip = NULL;
 	CLINK *clink = NULL;
-	int i, channel, verbose=0;
+	int i, channel, verbose = 0;
 	float arg;
 	char *shape;
 	char cmd[256];
 
-	if (argc==1) {
+	if (argc == 1) {
 		printhelp();
 		return 0;
 	}
 
-	for(i=1;i<argc;i++){
-		if(!strcmp(argv[i], "-h")){
+	for (i = 1; i < argc; i++) {
+		if (!strcmp(argv[i], "-h")) {
 			printhelp();
 			return 0;
-		}else if(!strcmp(argv[i], "-v")){
+		} else if (!strcmp(argv[i], "-v")) {
 			verbose++;
-		}else if(!strcmp(argv[i], "-q")){
+		} else if (!strcmp(argv[i], "-q")) {
 			verbose--;
-		}else if(!strcmp(argv[i], "-ip") || !strcmp(argv[i], "-usb")){
+		} else if (!strcmp(argv[i], "-ip") || !strcmp(argv[i], "-usb")) {
 			device_ip = strdup(argv[++i]);
-		}else if(!strcmp(argv[i], "-d")){
-			if(cmd_add(argv[++i])){
+		} else if (!strcmp(argv[i], "-d")) {
+			if (cmd_add(argv[++i])) {
 				return 1;
 			}
-		// this isn't an option so it must be a command,
-		}else{
-			if(verbose>0){
-				printf("Processing: %s\n",argv[i]);
-				}
-			channel=atoi(argv[i]+2);
-			if(argv[i][0] == 'S'){
-				shape = argv[i]+4;
-			}else{
-				arg=atof(argv[i]+4);
+			// this isn't an option so it must be a command,
+		} else {
+			if (verbose > 0) {
+				printf("Processing: %s\n", argv[i]);
 			}
-			if(verbose>0){
-				printf("Channel = %d argument = %f\n",channel,arg);
+			channel = atoi(argv[i] + 2);
+			if (argv[i][0] == 'S') {
+				shape = argv[i] + 4;
+			} else {
+				arg = atof(argv[i] + 4);
+			}
+			if (verbose > 0) {
+				printf("Channel = %d argument = %f\n", channel,
+				       arg);
+			}
+			switch (argv[i][0]) {
+			case 'E':
+				snprintf(cmd, 256, "OUTP%d:STAT %s", channel,
+					 argv[i] + 4);
+				if (verbose > 0)
+					printf("vxi11_send: %s\n", cmd);
+				if (cmd_add(cmd)) {
+					return 1;
 				}
-			switch(argv[i][0]){
-				case 'E':
-					snprintf(cmd, 256, "OUTP%d:STAT %s",channel,argv[i]+4);
-					if(verbose>0)printf("vxi11_send: %s\n",cmd);
-					if(cmd_add(cmd)){
-						return 1;
-					}
-					break;
-				case 'O':
-					snprintf(cmd, 256, "SOUR%d:VOLT:LEV:IMM:OFFS %fV",channel,arg);
-					if(verbose>0)printf("vxi11_send: %s\n",cmd);
-					if(cmd_add(cmd)){
-						return 1;
-					}
-					break;
-				case 'A':
-				case 'V':
-					snprintf(cmd, 256, "SOUR%d:VOLT:LEV:IMM:AMPL %fVPP",channel,arg);
-					if(verbose>0)printf("vxi11_send: %s\n",cmd);
-					if(cmd_add(cmd)){
-						return 1;
-					}
-					break;
-				case 'F':
-					snprintf(cmd, 256, "SOUR%d:FREQ:FIX %fHz",channel,arg);
-					if(verbose>0)printf("vxi11_send: %s\n",cmd);
-					if(cmd_add(cmd)){
-						return 1;
-					}
-					break;
-				case 'P':
-					snprintf(cmd, 256, "SOUR%d:PHAS:ADJ %fDEG",channel,arg);
-					if(verbose>0)printf("vxi11_send: %s\n",cmd);
-					if(cmd_add(cmd)){
-						return 1;
-					}
-					break;
-				case 'S':
-					if(!strcasecmp(shape, "DC")){
-						snprintf(cmd, 256, "SOUR%d:FUNC:SHAP DC", channel);
-						if(verbose>0)printf("vxi11_send: %s\n",cmd);
-					}else if(!strcasecmp(shape, "SINE")){
-						snprintf(cmd, 256, "SOUR%d:FUNC:SHAP SIN", channel);
-						if(verbose>0)printf("vxi11_send: %s\n",cmd);
-					}else if(!strcasecmp(shape, "SQUARE")){
-						snprintf(cmd, 256, "SOUR%d:FUNC:SHAP SQU", channel);
-						if(verbose>0)printf("vxi11_send: %s\n",cmd);
-					}else if(!strcasecmp(shape, "TRIANGLE")){
-						snprintf(cmd, 256, "SOUR%d:FUNC:SHAP TRI", channel);
-						if(verbose>0)printf("vxi11_send: %s\n",cmd);
-					}else{
-						printf("Unknown shape '%s'.\n", shape);
-						return 1;
-					}
-					if(cmd_add(cmd)){
-						return 1;
-					}
-					break;
-				default:
-					printf("Unknown command in \"normal\" mode\n");
+				break;
+			case 'O':
+				snprintf(cmd, 256,
+					 "SOUR%d:VOLT:LEV:IMM:OFFS %fV",
+					 channel, arg);
+				if (verbose > 0)
+					printf("vxi11_send: %s\n", cmd);
+				if (cmd_add(cmd)) {
+					return 1;
+				}
+				break;
+			case 'A':
+			case 'V':
+				snprintf(cmd, 256,
+					 "SOUR%d:VOLT:LEV:IMM:AMPL %fVPP",
+					 channel, arg);
+				if (verbose > 0)
+					printf("vxi11_send: %s\n", cmd);
+				if (cmd_add(cmd)) {
+					return 1;
+				}
+				break;
+			case 'F':
+				snprintf(cmd, 256, "SOUR%d:FREQ:FIX %fHz",
+					 channel, arg);
+				if (verbose > 0)
+					printf("vxi11_send: %s\n", cmd);
+				if (cmd_add(cmd)) {
+					return 1;
+				}
+				break;
+			case 'P':
+				snprintf(cmd, 256, "SOUR%d:PHAS:ADJ %fDEG",
+					 channel, arg);
+				if (verbose > 0)
+					printf("vxi11_send: %s\n", cmd);
+				if (cmd_add(cmd)) {
+					return 1;
+				}
+				break;
+			case 'S':
+				if (!strcasecmp(shape, "DC")) {
+					snprintf(cmd, 256,
+						 "SOUR%d:FUNC:SHAP DC",
+						 channel);
+					if (verbose > 0)
+						printf("vxi11_send: %s\n", cmd);
+				} else if (!strcasecmp(shape, "SINE")) {
+					snprintf(cmd, 256,
+						 "SOUR%d:FUNC:SHAP SIN",
+						 channel);
+					if (verbose > 0)
+						printf("vxi11_send: %s\n", cmd);
+				} else if (!strcasecmp(shape, "SQUARE")) {
+					snprintf(cmd, 256,
+						 "SOUR%d:FUNC:SHAP SQU",
+						 channel);
+					if (verbose > 0)
+						printf("vxi11_send: %s\n", cmd);
+				} else if (!strcasecmp(shape, "TRIANGLE")) {
+					snprintf(cmd, 256,
+						 "SOUR%d:FUNC:SHAP TRI",
+						 channel);
+					if (verbose > 0)
+						printf("vxi11_send: %s\n", cmd);
+				} else {
+					printf("Unknown shape '%s'.\n", shape);
+					return 1;
+				}
+				if (cmd_add(cmd)) {
+					return 1;
+				}
+				break;
+			default:
+				printf("Unknown command in \"normal\" mode\n");
 			}
 		}
 	}
 
 	/* This is the default IP, and as this command previously used this as
 	 * default it is retained here in order not to break any old scripts */
-	if(!device_ip){
+	if (!device_ip) {
 		device_ip = strdup("128.243.74.108");
 	}
 
 	clink = vxi11_open_device(device_ip);
-	if (!clink){
+	if (!clink) {
 		printf("Error opening device...\n");
 		exit(2);
 	}
 
-	for(i=0; i<cmd_count; i++){
+	for (i = 0; i < cmd_count; i++) {
 		vxi11_send(clink, cmds[i]);
 	}
 	vxi11_close_device(device_ip, clink);
 }
 
-void printhelp(void){
+void printhelp(void)
+{
 	printf("\nTektronix AFG 3252 control program\n");
 	printf("GPL Matt 2008\n");
 	printf("Usage: tek_afg [-ip www.xxx.yyy.zzz] [options] <commands>\n");
 	printf("Usage: tek_afg [-usb USBX::0xXXXX...] [options] <commands>\n");
-	printf("If IP is to be specified, it must be done before options or commands,\n");
-	printf("if not specified then default will be used (128.243.74.108).\n\n");
+	printf
+	    ("If IP is to be specified, it must be done before options or commands,\n");
+	printf
+	    ("if not specified then default will be used (128.243.74.108).\n\n");
 	printf("Options:\n");
 	printf("-v increase verbosity, -q decrease verbosity\n");
 	printf("-h help - this help page\n");
-	printf("-d \"string\" - send string direct to AFG (see AFG SCPI manual)\n\n");	
+	printf
+	    ("-d \"string\" - send string direct to AFG (see AFG SCPI manual)\n\n");
 	printf("Commands:\n");
 	printf("E - enable channel eg E:1:ON or E:2:OFF\n");
 	printf("O - Offset voltage eg O:1:0.5 (offset on channel 1 is 0.5V)\n");
 	printf("A - synonym for V\n");
-	printf("V - set voltage eg V:1:2 (set PP voltage on channel 1 to 2V)\n");
-	printf("F - set frequency eg F:2:10000 (set frequency on channel 2 to 10kHz)\n");
-	printf("P - set phase eg P:1:180 (set phase on channel 1 to 180 degrees)\n");
+	printf
+	    ("V - set voltage eg V:1:2 (set PP voltage on channel 1 to 2V)\n");
+	printf
+	    ("F - set frequency eg F:2:10000 (set frequency on channel 2 to 10kHz)\n");
+	printf
+	    ("P - set phase eg P:1:180 (set phase on channel 1 to 180 degrees)\n");
 	printf("S - set shape eg DC SINE SQUARE TRIANGLE.\n\n");
 }
-
