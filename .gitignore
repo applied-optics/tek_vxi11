@@ -1,4 +1,5 @@
 build/
+*.o
 *.wf
 *.wfi
 library/libtek_user.so.0
