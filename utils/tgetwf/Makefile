@@ -13,6 +13,6 @@ tgetwf.o: tgetwf.cc
 clean:
 	rm -f *.o test.* tgetwf
 
-install:
-	$(INSTALL) tgetwf $(DESTDIR)$(prefix)/bin
+install : all
+	$(INSTALL) tgetwf $(DESTDIR)$(prefix)/bin/
 

@@ -13,6 +13,6 @@ tek_afg.o: tek_afg.cc
 clean:
 	rm -f *.o tek_afg
 
-install:
-	$(INSTALL) tek_afg $(DESTDIR)$(prefix)/bin
+install : all
+	$(INSTALL) tek_afg $(DESTDIR)$(prefix)/bin/
 

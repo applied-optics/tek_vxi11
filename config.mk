@@ -3,7 +3,7 @@ LDFLAGS=
 
 CXX=g++
 
-INSTALL=install
-MAKE=make
+INSTALL?=install
+MAKE?=make
 
 prefix=/usr/local

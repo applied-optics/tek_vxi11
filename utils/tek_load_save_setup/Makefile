@@ -19,7 +19,7 @@ tek_save_setup.o: tek_save_setup.cc
 clean:
 	rm -f *.o tek_load_setup tek_save_setup *.tss
 
-install:
-	$(INSTALL) tek_load_setup $(DESTDIR)$(prefix)/bin
-	$(INSTALL) tek_save_setup $(DESTDIR)$(prefix)/bin
+install : all
+	$(INSTALL) tek_load_setup $(DESTDIR)$(prefix)/bin/
+	$(INSTALL) tek_save_setup $(DESTDIR)$(prefix)/bin/
 

@@ -13,6 +13,6 @@ tek_afg_upload_arb.o: tek_afg_upload_arb.cc
 clean:
 	rm -f *.o tek_afg_upload_arb *.arb
 
-install:
-	$(INSTALL) tek_afg_upload_arb $(DESTDIR)$(prefix)/bin
+install : all
+	$(INSTALL) tek_afg_upload_arb $(DESTDIR)$(prefix)/bin/
 
