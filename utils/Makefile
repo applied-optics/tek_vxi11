@@ -10,5 +10,6 @@ clean:
 	for d in ${DIRS}; do $(MAKE) -C $${d} clean; done
 
 install:
+	$(INSTALL) -d $(DESTDIR)$(prefix)/usr/bin
 	for d in ${DIRS}; do $(MAKE) -C $${d} install; done
 

@@ -17,7 +17,9 @@ clean:
 	rm -f *.o libtek_user.so.0 TAGS
 
 install: all
+	$(INSTALL) -d $(DESTDIR)$(prefix)/lib${LIB_SUFFIX}/
 	$(INSTALL) libtek_user.so.0 $(DESTDIR)$(prefix)/lib${LIB_SUFFIX}/
 	ln -sf libtek_user.so.0 $(DESTDIR)$(prefix)/lib${LIB_SUFFIX}/libtek_user.so
+	$(INSTALL) -d $(DESTDIR)$(prefix)/include/
 	$(INSTALL) tek_user.h $(DESTDIR)$(prefix)/include/
 
