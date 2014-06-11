@@ -734,10 +734,14 @@ void tek_afg_swap_bytes(char *buf, size_t len)
 {
 	char *tmp;
 	unsigned long i;
-	tmp = new char[len];
+	tmp = (char *)malloc(len);
+	if(!tmp){
+		return;
+	}
 	for (i = 0; i < len; i = i + 2) {
 		tmp[i + 1] = buf[i];
 		tmp[i] = buf[i + 1];
 	}
 	memcpy(buf, tmp, len);
+	free(tmp);
 }
