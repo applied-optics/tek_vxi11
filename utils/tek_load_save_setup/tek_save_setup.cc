@@ -1,16 +1,3 @@
-/* $Id: tek_save_setup.c,v 1.2 2007/06/01 13:40:13 sds Exp $ */
-
-/*
- * $Log: tek_save_setup.c,v $
- * Revision 1.2  2007/06/01 13:40:13  sds
- * increased buffer size from 10000 to 25000 to cope with all the extra
- * settings required for MSO4000 scopes.
- *
- * Revision 1.1  2007/05/17 12:49:53  sds
- * Initial revision
- *
- */
-
 /* tek_save_setup.c
  * Copyright (C) 2007 Steve D. Sharples
  *

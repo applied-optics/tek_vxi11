@@ -1,20 +1,3 @@
-/* $Id: tek_afg_upload_arb.c,v 1.3 2007/10/30 16:18:14 sds Exp $ */
-
-/*
- * $Log: tek_afg_upload_arb.c,v $
- * Revision 1.3  2007/10/30 16:18:14  sds
- * changed char*'s in sc() to const char*'s to get rid of
- * pedantic gcc warning.
- *
- * Revision 1.2  2007/05/15 15:10:14  sds
- * Changed tek_afg_user library to more generic "tek_user" library.
- * Accordingly, a couple of library calls got changed, that's all.
- *
- * Revision 1.1  2006/08/25 10:30:43  sds
- * Initial revision
- *
- */
-
 /* tek_afg_upload_arb.c
  * Copyright (C) 2006 Steve D. Sharples
  *

@@ -1,15 +1,3 @@
-/* $Id: tek_afg.c,v 1.3 2008/09/03 15:14:30 sds Exp $ */
-
-/*
- * $Log: tek_afg.c,v $
- * Revision 1.3  2008/09/03 15:14:30  sds
- * Removed the hard-wiring of instrument IP. Still defaults to the
- * original hard-wired IP if none is specified.
- * Tidied up the help screen.
- * Added GPL and other sundries.
- *
- */
-
 /* tek_afg.c
  * Copyright (C) 2008 Matt Clark and Steve Sharples
  * Copyright (C) 2011 Roger Light

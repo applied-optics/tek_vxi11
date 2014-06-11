@@ -1,35 +1,3 @@
-/* $Id: tgetwf.c,v 1.6 2010/05/28 08:19:52 sds Exp rjs $ */
-
-/*
- * $Log: tgetwf.c,v $
- * Revision 1.6  2010/05/28 08:19:52  sds
- * Added a couple of segmented memory commands (dpo7000). Probably buggy.
- *
- * Revision 1.5  2009/08/17 15:30:52  sds
- * Made clear_sweeps=TRUE the default. Makes more sense this way.
- * Added -noclsw option (causes scope to stay in "run" mode) if you really
- * want it.
- * Updated help text to indicate how to acquire from the reference channels
- * on 4000-series scopes (REF1-REF4).
- *
- * Revision 1.4  2008/09/09 15:29:11  sds
- * added the -p, -h, -s, -e, and -no_e switches, to allow explicit setting
- * of peak detect, hires, sample and envelope modes, and (on 3000-series
- * scopes) the setting of the no of envelopes.
- *
- * Revision 1.3  2007/10/30 16:20:21  sds
- * changed char*'s in sc() to const char*'s to get rid of
- * pedantic gcc warning.
- *
- * Revision 1.2  2007/06/01 12:02:28  sds
- * added ability to set number of points (actually the horizontal
- * record length).
- *
- * Revision 1.1  2007/05/17 12:46:08  sds
- * Initial revision
- *
- */
-
 /* tgetwf.c
  * Copyright (C) 2007 Steve D. Sharples
  *
