@@ -7,7 +7,7 @@ CFLAGS:=$(CFLAGS) -I../../library
 all:	tgetwf
 
 tgetwf: tgetwf.o
-	$(CXX) -o $@ $^ ../../library/libtek_vxi11.so.0 $(LDFLAGS)
+	$(CXX) -o $@ $^ ../../library/$(full_libname) $(LDFLAGS)
 
 tgetwf.o: tgetwf.cc
 	$(CXX) $(CFLAGS) -c $^ -o $@
