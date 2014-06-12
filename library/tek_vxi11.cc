@@ -1,4 +1,4 @@
-/* tek_user.c
+/* tek_vxi11.c
  * Copyright (C) 2006-2007 Steve D. Sharples
  *
  * User library of useful functions for talking to Tektronix instruments
@@ -41,7 +41,7 @@
 #define round(a) floor(a+0.5f)
 #endif
 
-#include "tek_user.h"
+#include "tek_vxi11.h"
 
 /*****************************************************************************
  * Generic Tektronix functions, suitable for all devices                     *

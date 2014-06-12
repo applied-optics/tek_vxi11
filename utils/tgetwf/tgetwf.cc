@@ -12,7 +12,7 @@
  * the same wf file.
  *
  * The source is extensively commented and from this, and a look at the
- * tek_user.c library, you will begin to understand the approach to
+ * tek_vxi11.c library, you will begin to understand the approach to
  * acquiring data that I've taken.
  *
  * You will also need the
@@ -39,7 +39,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../../library/tek_user.h"
+#include "tek_vxi11.h"
 
 #ifdef WIN32
 #define snprintf sprintf_s

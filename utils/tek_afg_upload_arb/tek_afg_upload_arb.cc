@@ -33,7 +33,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../../library/tek_user.h"
+#include "tek_vxi11.h"
 
 #ifndef	BOOL
 #define	BOOL	int

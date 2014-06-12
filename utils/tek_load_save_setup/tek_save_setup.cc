@@ -32,7 +32,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../../library/tek_user.h"
+#include "tek_vxi11.h"
 #define BUF_LEN 30000
 
 int main(int argc, char *argv[])

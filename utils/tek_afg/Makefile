@@ -2,6 +2,8 @@ include ../../config.mk
 
 .PHONY:	all clean install
 
+CFLAGS:=$(CFLAGS) -I../../library
+
 all:	tek_afg
 
 tek_afg: tek_afg.o
