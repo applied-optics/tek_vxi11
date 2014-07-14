@@ -300,13 +300,11 @@ void tek_scope_force_xincr_update(VXI11_CLINK * clink, unsigned long timeout)
 long tek_scope_calculate_no_of_bytes(VXI11_CLINK * clink, int is_TDS3000,
 				     unsigned long timeout)
 {
-	char cmd[256];
 	long no_acq_points;
 	long no_points;
 	double sample_rate;
 	long start, stop;
 	double xincr, hor_scale;
-	int slen;
 
 	no_acq_points = vxi11_obtain_long_value(clink, "HOR:RECORD?");
 	hor_scale = vxi11_obtain_double_value(clink, "HOR:MAIN:SCALE?");
@@ -323,10 +321,8 @@ long tek_scope_calculate_no_of_bytes(VXI11_CLINK * clink, int is_TDS3000,
 	start = ((no_acq_points - no_points) / 2) + 1;
 	stop = ((no_acq_points + no_points) / 2);
 	/* set number of points to receive to be equal to the record length */
-	slen = sprintf(cmd, "DATA:START %ld", start);
-	vxi11_send(clink, cmd, slen);
-	slen = sprintf(cmd, "DATA:STOP %ld", stop);
-	vxi11_send(clink, cmd, slen);
+	vxi11_send_sprintf(clink, "DATA:START %ld", start);
+	vxi11_send_sprintf(clink, "DATA:STOP %ld", stop);
 
 /*	printf("no_acq_points = %ld, xincr = %g, no_points = %ld\n",no_acq_points, xincr, no_points);
 	printf("start = %ld, stop = %ld\n",start, stop);
@@ -359,19 +355,16 @@ long tek_scope_get_data(VXI11_CLINK * clink, char chan, int clear_sweeps,
 long tek_scope_get_data(VXI11_CLINK * clink, char *source, int clear_sweeps,
 			char *buf, size_t len, unsigned long timeout)
 {
-	char cmd[256];
 	int ret;
 	long bytes_returned;
 	long opc_value;
-	int slen;
 
 	/* Check the string. If it starts with 1-4 or 'm', convert accordingly;
 	 * otherwise leave alone */
 	tek_scope_channel_str(source);
 
 	/* set the source channel */
-	slen = sprintf(cmd, "DATA:SOURCE %s", source);
-	ret = vxi11_send(clink, cmd, slen);
+	ret = vxi11_send_sprintf(clink, "DATA:SOURCE %s", source);
 	if (ret < 0) {
 		printf("error, could not send DATA SOURCE cmd, quitting...\n");
 		return ret;
@@ -608,10 +601,7 @@ long tek_scope_get_no_points(VXI11_CLINK * clink)
  * value. */
 long tek_scope_set_record_length(VXI11_CLINK * clink, long record_length)
 {
-	char cmd[256];
-	int slen;
-	slen = sprintf(cmd, "HOR:RECORDLENGTH %ld", record_length);
-	vxi11_send(clink, cmd, slen);
+	vxi11_send_sprintf(clink, "HOR:RECORDLENGTH %ld", record_length);
 
 	return vxi11_obtain_long_value(clink, "HOR:RECORDLENGTH?");
 }
@@ -666,8 +656,6 @@ int tek_afg_send_arb(VXI11_CLINK * clink, char *buf, size_t len,
 		     int chan)
 {
 	int ret;
-	char cmd[256];
-	int slen;
 
 	tek_afg_swap_bytes(buf, len);	/* Swap bytes, little endian -> big endian */
 	ret =
@@ -677,8 +665,7 @@ int tek_afg_send_arb(VXI11_CLINK * clink, char *buf, size_t len,
 		return ret;
 	}
 	if (chan > 0 && chan < 5) {
-		slen = sprintf(cmd, "TRACE:COPY USER%d,EMEM", chan);
-		return vxi11_send(clink, cmd, slen);
+		return vxi11_send_sprintf(clink, "TRACE:COPY USER%d,EMEM", chan);
 	}
 	return 0;
 }
