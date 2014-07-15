@@ -3,10 +3,10 @@ import vxi11
 
 class TekVxi11(vxi11.Vxi11):
     def __init__(self, address, device="inst0"):
-        super().__init__(self, address, device)
+        super().__init__(address, device)
 
         buf = self.send_and_receive("*IDN?")
-        if buf.find("TDS 3") > 0:
+        if str(buf).find("TDS 3") > 0:
             self._is_TDS3000 = True
         else:
             self._is_TDS3000 = False
@@ -380,7 +380,7 @@ class TekVxi11(vxi11.Vxi11):
         if ret < 0:
             print("tek_afg_send_arb: error sending waveform data...")
             return ret
-        if chan > 0 && chan < 5
+        if chan > 0 and chan < 5:
             return self.send("TRACE:COPY USER%d,EMEM" % chan)
         return 0
 
@@ -395,11 +395,11 @@ class TekVxi11(vxi11.Vxi11):
             return 'CH3'
         elif chan == '4':
             return 'CH4'
-        else
+        else:
             raise ValueError("Invalid channel number.")
 
     def afg_swap_bytes(self, buf):
-        raise
+        return buf
     #void tek_afg_swap_bytes(char *buf, size_t len) {
         #char *tmp
         #unsigned long i
