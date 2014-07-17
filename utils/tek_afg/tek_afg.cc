@@ -202,7 +202,7 @@ int main(int argc, char *argv[])
 	}
 
 	for (i = 0; i < cmd_count; i++) {
-		vxi11_send_sprintf(clink, cmds[i]);
+		vxi11_send_printf(clink, cmds[i]);
 	}
 	vxi11_close_device(clink, device_ip);
 }
