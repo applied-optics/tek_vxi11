@@ -33,10 +33,6 @@
 #include <unistd.h>
 #endif
 
-#ifdef WIN32
-#define snprintf sprintf_s
-#endif
-
 #ifndef round
 #define round(a) floor(a+0.5f)
 #endif
@@ -73,14 +69,14 @@ int tek_close(VXI11_CLINK * clink, const char *ip)
 int tek_scope_init(VXI11_CLINK * clink)
 {
 	int ret;
-	ret = vxi11_send_sprintf(clink, ":HEADER 0");	/* no headers in replies */
+	ret = vxi11_send_printf(clink, ":HEADER 0");	/* no headers in replies */
 	if (ret < 0) {
 		printf
 		    ("error in tek_scope_init, could not send command ':HEADER 0'\n");
 		return ret;
 	}
-	vxi11_send_sprintf(clink, ":DATA:WIDTH 2");	/* 2 bytes per data point (16 bit) */
-	vxi11_send_sprintf(clink, ":DATA:ENCDG SRIBINARY");	/* little endian, signed */
+	vxi11_send_printf(clink, ":DATA:WIDTH 2");	/* 2 bytes per data point (16 bit) */
+	vxi11_send_printf(clink, ":DATA:ENCDG SRIBINARY");	/* little endian, signed */
 	return 0;
 }
 
@@ -95,7 +91,7 @@ int tek_scope_get_setup(VXI11_CLINK * clink, char *buf, size_t len)
 	int ret;
 	long bytes_returned;
 
-	ret = vxi11_send_sprintf(clink, "SET?");
+	ret = vxi11_send_printf(clink, "SET?");
 	if (ret < 0) {
 		printf("error, could not ask for Tek scope system setup...\n");
 		return ret;
@@ -175,15 +171,11 @@ long tek_scope_write_wfi_file(VXI11_CLINK * clink, char *wfiname, char *source,
 			      char *captured_by, int no_of_traces,
 			      unsigned long timeout)
 {
-	char cmd[256];
-	int slen;
-
 	/* Check the string. If it starts with 1-4 or 'm', convert accordingly;
 	 * otherwise leave alone */
 	tek_scope_channel_str(source);
 	/* set the source channel */
-	slen = snprintf(cmd, 256, "DATA:SOURCE %s", source);
-	vxi11_send(clink, cmd, slen);
+	vxi11_send_printf(clink, "DATA:SOURCE %s", source);
 
 	return tek_scope_write_wfi_file(clink, wfiname, captured_by,
 					no_of_traces, timeout);
@@ -232,14 +224,14 @@ long tek_scope_set_for_capture(VXI11_CLINK * clink, int clear_sweeps,
 	 * over and over again. (If it's a TDS3000, then we've already done
 	 * this anyway in the pratting around waiting for XINCR to update). */
 	} else if (clear_sweeps == 0) {
-		vxi11_send_sprintf(clink, "ACQUIRE:STATE 0");	//RJS removed the runsrop command and changed STATE 1 to STATE 0 to get segmented noclsw to work correctly. it was breaking repeated runs of clsw and noclsw
+		vxi11_send_printf(clink, "ACQUIRE:STATE 0");	//RJS removed the runsrop command and changed STATE 1 to STATE 0 to get segmented noclsw to work correctly. it was breaking repeated runs of clsw and noclsw
 		value = vxi11_obtain_long_value_timeout(clink, "*OPC?", timeout);	//hopefully this wont break anything else!
 	}
 
 	no_bytes = tek_scope_calculate_no_of_bytes(clink, is_TDS3000, timeout);
 
 	if (clear_sweeps == 1) {
-		vxi11_send_sprintf(clink, "ACQUIRE:STOPAFTER SEQUENCE");
+		vxi11_send_printf(clink, "ACQUIRE:STOPAFTER SEQUENCE");
 	}
 
 	return no_bytes;
@@ -281,7 +273,7 @@ void tek_scope_force_xincr_update(VXI11_CLINK * clink, unsigned long timeout)
 	 * returning it to averaging if applicable. Seems to work ok. */
 	acq_state = tek_scope_get_averages(clink);
 	tek_scope_set_averages(clink, 0);	/* set to no averaging (sample mode) */
-	vxi11_send_sprintf(clink, "ACQUIRE:STOPAFTER RUNSTOP;:ACQUIRE:STATE 1");
+	vxi11_send_printf(clink, "ACQUIRE:STOPAFTER RUNSTOP;:ACQUIRE:STATE 1");
 	value = vxi11_obtain_long_value_timeout(clink, "*OPC?", timeout);
 	tek_scope_set_averages(clink, acq_state);
 }
@@ -321,8 +313,8 @@ long tek_scope_calculate_no_of_bytes(VXI11_CLINK * clink, int is_TDS3000,
 	start = ((no_acq_points - no_points) / 2) + 1;
 	stop = ((no_acq_points + no_points) / 2);
 	/* set number of points to receive to be equal to the record length */
-	vxi11_send_sprintf(clink, "DATA:START %ld", start);
-	vxi11_send_sprintf(clink, "DATA:STOP %ld", stop);
+	vxi11_send_printf(clink, "DATA:START %ld", start);
+	vxi11_send_printf(clink, "DATA:STOP %ld", stop);
 
 /*	printf("no_acq_points = %ld, xincr = %g, no_points = %ld\n",no_acq_points, xincr, no_points);
 	printf("start = %ld, stop = %ld\n",start, stop);
@@ -364,7 +356,7 @@ long tek_scope_get_data(VXI11_CLINK * clink, char *source, int clear_sweeps,
 	tek_scope_channel_str(source);
 
 	/* set the source channel */
-	ret = vxi11_send_sprintf(clink, "DATA:SOURCE %s", source);
+	ret = vxi11_send_printf(clink, "DATA:SOURCE %s", source);
 	if (ret < 0) {
 		printf("error, could not send DATA SOURCE cmd, quitting...\n");
 		return ret;
@@ -374,7 +366,7 @@ long tek_scope_get_data(VXI11_CLINK * clink, char *source, int clear_sweeps,
 	if (clear_sweeps == 1) {
 		/* This is the equivalent of pressing the "Single Seq" button
 		 * on the front of the scope */
-		vxi11_send_sprintf(clink, "ACQUIRE:STATE 1");
+		vxi11_send_printf(clink, "ACQUIRE:STATE 1");
 		/* This request will not return ANYTHING until the acquisition
 		 * is complete (OPC? = OPeration Complete?). It's up to the 
 		 * user to supply a long enough timeout. */
@@ -388,7 +380,7 @@ long tek_scope_get_data(VXI11_CLINK * clink, char *source, int clear_sweeps,
 		}
 	}
 	/* ask for the data, and receive it */
-	vxi11_send_sprintf(clink, "CURVE?");
+	vxi11_send_printf(clink, "CURVE?");
 	bytes_returned = vxi11_receive_data_block(clink, buf, len, timeout);
 
 	return bytes_returned;
@@ -396,7 +388,7 @@ long tek_scope_get_data(VXI11_CLINK * clink, char *source, int clear_sweeps,
 
 void tek_scope_set_for_auto(VXI11_CLINK * clink)
 {
-	vxi11_send_sprintf(clink, "ACQ:STOPAFTER RUNSTOP;:ACQ:STATE 1");
+	vxi11_send_printf(clink, "ACQ:STOPAFTER RUNSTOP;:ACQ:STATE 1");
 }
 
 /* Sets the number of averages. If passes a number <= 1, will set the scope to
@@ -416,21 +408,21 @@ void tek_scope_set_for_auto(VXI11_CLINK * clink)
 int tek_scope_set_averages(VXI11_CLINK * clink, int no_averages)
 {
 	if (no_averages == 0) {
-		return vxi11_send_sprintf(clink, "ACQUIRE:MODE SAMPLE");
+		return vxi11_send_printf(clink, "ACQUIRE:MODE SAMPLE");
 	}
 	if (no_averages == 1) {
-		return vxi11_send_sprintf(clink, "ACQUIRE:MODE HIRES");
+		return vxi11_send_printf(clink, "ACQUIRE:MODE HIRES");
 	}
 	if (no_averages == -1) {
-		return vxi11_send_sprintf(clink, "ACQUIRE:MODE PEAKDETECT");
+		return vxi11_send_printf(clink, "ACQUIRE:MODE PEAKDETECT");
 	}
 	if (no_averages > 1) {
-		vxi11_send_sprintf(clink, "ACQUIRE:NUMAVG %d", no_averages);
-		return vxi11_send_sprintf(clink, "ACQUIRE:MODE AVERAGE");
+		vxi11_send_printf(clink, "ACQUIRE:NUMAVG %d", no_averages);
+		return vxi11_send_printf(clink, "ACQUIRE:MODE AVERAGE");
 	}
 	if (no_averages < -1) {
 		vxi11_send(clink, "ACQUIRE:NUMENV %d", -no_averages);
-		return vxi11_send_sprintf(clink, "ACQUIRE:MODE ENVELOPE");
+		return vxi11_send_printf(clink, "ACQUIRE:MODE ENVELOPE");
 	}
 
 	return 1;
@@ -495,16 +487,14 @@ int tek_scope_get_averages(VXI11_CLINK * clink)
  * just the average. */
 int tek_scope_set_segmented_averages(VXI11_CLINK * clink, int no_averages)
 {
-	char cmd[256];
 	int max_segments;
 	long opc_value;
-	int slen;
 
 	/* See tek_scope_set_segmented() below for explanation of steps here */
-	vxi11_send_sprintf(clink, "HOR:FASTFRAME:STATE 0");
+	vxi11_send_printf(clink, "HOR:FASTFRAME:STATE 0");
 	opc_value = vxi11_obtain_long_value(clink, "*OPC?");
 	//usleep(400000);
-	vxi11_send_sprintf(clink, "ACQUIRE:STOPAFTER SEQUENCE;:ACQUIRE:STATE 1");
+	vxi11_send_printf(clink, "ACQUIRE:STOPAFTER SEQUENCE;:ACQUIRE:STATE 1");
 	opc_value = vxi11_obtain_long_value(clink, "*OPC?");
 	//usleep(400000);
 	max_segments =
@@ -513,10 +503,8 @@ int tek_scope_set_segmented_averages(VXI11_CLINK * clink, int no_averages)
 	if (no_averages >= max_segments) {
 		no_averages = max_segments - 1;
 	}
-	slen = sprintf(cmd,
-		       "HOR:FASTFRAME:SUMFRAME AVERAGE;:HOR:FASTFRAME:COUNT %d;:DATA:FRAMESTART %d;:DATA:FRAMESTOP %d",
+	vxi11_send_printf(clink, "HOR:FASTFRAME:SUMFRAME AVERAGE;:HOR:FASTFRAME:COUNT %d;:DATA:FRAMESTART %d;:DATA:FRAMESTOP %d",
 		       (no_averages + 1), (no_averages + 1), (no_averages + 1));
-	vxi11_send(clink, cmd, slen);
 #ifdef WIN32
 	Sleep(400);
 #else
@@ -542,14 +530,14 @@ int tek_scope_set_segmented(VXI11_CLINK * clink, int no_segments)
 	 * Failure to do (1-2) or (5) will result in incomplete acquisition,
 	 * following a transition from RUNSTOP mode to Fastframe mode. */
 
-	vxi11_send_sprintf(clink, "HOR:FASTFRAME:STATE 0");
+	vxi11_send_printf(clink, "HOR:FASTFRAME:STATE 0");
 	opc_value = vxi11_obtain_long_value(clink, "*OPC?");
 #ifdef WIN32
 	Sleep(1000);
 #else
 	usleep(1000000);
 #endif
-	vxi11_send_sprintf(clink, "ACQUIRE:STOPAFTER SEQUENCE;:ACQUIRE:STATE 1");
+	vxi11_send_printf(clink, "ACQUIRE:STOPAFTER SEQUENCE;:ACQUIRE:STATE 1");
 	opc_value = vxi11_obtain_long_value(clink, "*OPC?");
 #ifdef WIN32
 	Sleep(1000);
@@ -562,7 +550,7 @@ int tek_scope_set_segmented(VXI11_CLINK * clink, int no_segments)
 	if (no_segments >= max_segments) {
 		no_segments = max_segments;
 	}
-	vxi11_send_sprintf(clink,
+	vxi11_send_printf(clink,
 		"HOR:FASTFRAME:SUMFRAME NONE;:HOR:FASTFRAME:COUNT %d;:DATA:FRAMESTART 1;:DATA:FRAMESTOP %d",
 		no_segments, no_segments);
 #ifdef WIN32
@@ -601,7 +589,7 @@ long tek_scope_get_no_points(VXI11_CLINK * clink)
  * value. */
 long tek_scope_set_record_length(VXI11_CLINK * clink, long record_length)
 {
-	vxi11_send_sprintf(clink, "HOR:RECORDLENGTH %ld", record_length);
+	vxi11_send_printf(clink, "HOR:RECORDLENGTH %ld", record_length);
 
 	return vxi11_obtain_long_value(clink, "HOR:RECORDLENGTH?");
 }
@@ -665,7 +653,7 @@ int tek_afg_send_arb(VXI11_CLINK * clink, char *buf, size_t len,
 		return ret;
 	}
 	if (chan > 0 && chan < 5) {
-		return vxi11_send_sprintf(clink, "TRACE:COPY USER%d,EMEM", chan);
+		return vxi11_send_printf(clink, "TRACE:COPY USER%d,EMEM", chan);
 	}
 	return 0;
 }
