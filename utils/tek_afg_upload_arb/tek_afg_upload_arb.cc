@@ -61,7 +61,6 @@ int main(int argc, char *argv[])
 	static char *filename;
 	static char *progname;
 	char buf[BUF_LEN];
-	char cmd[256];
 	FILE *fi;
 	long bytes_returned;
 	VXI11_CLINK *clink;

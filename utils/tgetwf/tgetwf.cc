@@ -85,7 +85,6 @@ int main(int argc, char *argv[])
 	int no_traces_acquired;
 	char ch;
 	int index = 1;
-	double s_rate = 0;
 	long npoints = 0;
 	long actual_npoints;
 
